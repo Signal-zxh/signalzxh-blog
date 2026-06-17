@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Signal-zxh/signal-zxh/db"
 	"github.com/Signal-zxh/signal-zxh/model"
+	"github.com/Signal-zxh/signal-zxh/service"
 	"github.com/gin-gonic/gin"
 )
 
 type PostHandler struct{}
 
 func (h *PostHandler) GetPosts(c *gin.Context) {
-	posts, err := db.GetPosts()
+	posts, err := service.GetPosts()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -32,7 +32,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	id, err := db.CreatePost(req.Title)
+	id, err := service.CreatePost(req.Title)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -59,9 +59,9 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	err = db.UpdatePost(id, req.Title)
+	err = service.UpdatePost(id, req.Title)
 	if err != nil {
-		if errors.Is(err, db.ErrNoRowsAffected) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "post not found",
 			})
@@ -88,9 +88,9 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 		return
 	}
 
-	err = db.DeletePost(id)
+	err = service.DeletePost(id)
 	if err != nil {
-		if errors.Is(err, db.ErrNoRowsAffected) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "post not found",
 			})
@@ -115,9 +115,9 @@ func (h *PostHandler) GetPostByID(c *gin.Context) {
 		return
 	}
 
-	post, err := db.GetPostByID(id)
+	post, err := service.GetPostByID(id)
 	if err != nil {
-		if errors.Is(err, db.ErrNotFound) {
+		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "post not found",
 			})

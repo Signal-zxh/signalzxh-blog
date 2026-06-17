@@ -1,0 +1,51 @@
+package service
+
+import (
+	"errors"
+
+	"github.com/Signal-zxh/signal-zxh/db"
+	"github.com/Signal-zxh/signal-zxh/model"
+)
+
+var ErrNotFound = errors.New("not found")
+
+func GetPostByID(id int) (model.Post, error) {
+	post, err := db.GetPostByID(id)
+	if err != nil {
+		if errors.Is(err, db.ErrNotFound) {
+			return model.Post{}, ErrNotFound
+		}
+		return model.Post{}, err
+	}
+	return post, nil
+}
+
+func GetPosts() ([]model.Post, error) {
+	return db.GetPosts()
+}
+
+func CreatePost(title string) (int64, error) {
+	return db.CreatePost(title)
+}
+
+func UpdatePost(id int, title string) error {
+	err := db.UpdatePost(id, title)
+	if err != nil {
+		if errors.Is(err, db.ErrNoRowsAffected) {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
+}
+
+func DeletePost(id int) error {
+	err := db.DeletePost(id)
+	if err != nil {
+		if errors.Is(err, db.ErrNoRowsAffected) {
+			return ErrNotFound
+		}
+		return err
+	}
+	return nil
+}
