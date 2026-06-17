@@ -73,13 +73,15 @@ docker-compose logs -f signal-zxh
 
 ```
 signal-zxh/
-├── db/              # 数据库初始化
-│   └── mysql.go
-│   └── post.go
+├── db/              # 数据库初始化和操作
+│   └── mysql.go     # 数据库连接
+│   └── post.go      # 文章数据访问
 ├── handler/         # HTTP 处理器
-│   └── post.go
+│   └── post.go      # 文章请求处理
 ├── model/           # 数据模型
-│   └── post.go
+│   └── post.go      # 文章结构定义
+├── service/         # 业务逻辑层
+│   └── post.go      # 业务逻辑封装
 ├── static/          # 静态文件
 │   ├── index.html
 │   └── style.css
