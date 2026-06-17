@@ -75,6 +75,7 @@ docker-compose logs -f signal-zxh
 signal-zxh/
 ├── db/              # 数据库初始化
 │   └── mysql.go
+│   └── post.go
 ├── handler/         # HTTP 处理器
 │   └── post.go
 ├── model/           # 数据模型

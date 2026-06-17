@@ -121,11 +121,12 @@ func (h *PostHandler) GetPostByID(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "post not found",
 			})
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err.Error(),
-			})
+			return
 		}
 
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
