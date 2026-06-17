@@ -1,0 +1,48 @@
+services:
+  signal-zxh:
+    build:
+      context: .
+      target: final
+    container_name: signal-zxh
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./static:/app/static
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DBHOST: mysql
+      DBPORT: 3306
+      DBUSER: root
+      DBPASS: ${DBPASS}
+      DBNAME: blog
+    mem_limit: 200m
+    memswap_limit: 200m
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: blog
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql-conf/my.cnf:/etc/mysql/conf.d/my.cnf
+      - mysql-data:/var/lib/mysql
+    command:
+      - '--character-set-server=utf8mb4'
+      - '--collation-server=utf8mb4_unicode_ci'
+      - '--skip-character-set-client-handshake'
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    mem_limit: 300m
+    memswap_limit: 300m
+volumes:
+  mysql-data:
