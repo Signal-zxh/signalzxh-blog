@@ -15,7 +15,7 @@ type PostHandler struct{}
 func (h *PostHandler) GetPosts(c *gin.Context) {
 	posts, err := service.GetPosts()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
+		c.JSON(http.StatusInternalServerError, model.Fail("internal error"))
 		return
 	}
 
@@ -32,6 +32,10 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 
 	id, err := service.CreatePost(req.Title)
 	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, model.Fail("invalid input"))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
 		return
 	}
@@ -61,6 +65,8 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, model.Fail("post not found"))
+		} else if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, model.Fail("invalid input"))
 		} else {
 			c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
 		}

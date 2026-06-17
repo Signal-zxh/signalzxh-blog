@@ -7,7 +7,10 @@ import (
 	"github.com/Signal-zxh/signal-zxh/model"
 )
 
-var ErrNotFound = errors.New("not found")
+var (
+	ErrNotFound     = errors.New("not found")
+	ErrInvalidInput = errors.New("invalid input")
+)
 
 func GetPostByID(id int) (model.Post, error) {
 	post, err := db.GetPostByID(id)
@@ -25,10 +28,16 @@ func GetPosts() ([]model.Post, error) {
 }
 
 func CreatePost(title string) (int64, error) {
+	if title == "" || len(title) > 100 {
+		return 0, ErrInvalidInput
+	}
 	return db.CreatePost(title)
 }
 
 func UpdatePost(id int, title string) error {
+	if title == "" || len(title) > 100 {
+		return ErrInvalidInput
+	}
 	err := db.UpdatePost(id, title)
 	if err != nil {
 		if errors.Is(err, db.ErrNoRowsAffected) {
