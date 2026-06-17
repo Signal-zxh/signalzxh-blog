@@ -1,21 +1,17 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 
+	"github.com/Signal-zxh/signal-zxh/db"
+	"github.com/Signal-zxh/signal-zxh/model"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
 )
-
-type Post struct {
-	ID    int    `json:"id"`
-	Title string `json:"title"`
-}
 
 type CreatePostRequest struct {
 	Title string `json:"title"`
@@ -29,17 +25,9 @@ func main() {
 	godotenv.Load()
 	dsn := os.Getenv("DB_DSN")
 
-	db, err := sql.Open("mysql", dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	if err := db.Ping(); err != nil {
+	if err := db.Init(dsn); err != nil {
 		log.Fatal("db connect failed:", err)
 	}
-
-	log.Println("MySQL connected successfully")
 
 	r := gin.Default()
 
@@ -52,17 +40,17 @@ func main() {
 	})
 
 	r.GET("/posts", func(c *gin.Context) {
-		rows, err := db.Query("SELECT id, title FROM posts")
+		rows, err := db.DB.Query("SELECT id, title FROM posts")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		defer rows.Close()
 
-		var result []Post
+		var result []model.Post
 
 		for rows.Next() {
-			var p Post
+			var p model.Post
 			err := rows.Scan(&p.ID, &p.Title)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -84,9 +72,9 @@ func main() {
 			return
 		}
 
-		row := db.QueryRow("SELECT id, title FROM posts WHERE id = ?", id)
+		row := db.DB.QueryRow("SELECT id, title FROM posts WHERE id = ?", id)
 
-		var post Post
+		var post model.Post
 
 		err = row.Scan(&post.ID, &post.Title)
 		if err != nil {
@@ -109,7 +97,7 @@ func main() {
 			return
 		}
 
-		res, err := db.Exec("INSERT INTO posts(title) VALUES(?)", req.Title)
+		res, err := db.DB.Exec("INSERT INTO posts(title) VALUES(?)", req.Title)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -131,7 +119,7 @@ func main() {
 			return
 		}
 
-		res, err := db.Exec("DELETE FROM posts WHERE id = ?", id)
+		res, err := db.DB.Exec("DELETE FROM posts WHERE id = ?", id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -166,7 +154,7 @@ func main() {
 			return
 		}
 
-		res, err := db.Exec("UPDATE posts SET title = ? WHERE id = ?", req.Title, id)
+		res, err := db.DB.Exec("UPDATE posts SET title = ? WHERE id = ?", req.Title, id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
