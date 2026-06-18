@@ -32,7 +32,15 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	id, err := service.CreatePost(req.Title)
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, model.Fail("no user"))
+		return
+	}
+
+	uid := userID.(int)
+
+	id, err := service.CreatePost(req.Title, uid)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidInput) {
 			c.JSON(http.StatusBadRequest, model.Fail("invalid input"))

@@ -10,6 +10,7 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
 	r.Use(middleware.Logger())
+
 	// 静态页面
 	r.Static("/static", "./static")
 
@@ -20,13 +21,16 @@ func SetupRouter() *gin.Engine {
 
 	// handler
 	h := &handler.PostHandler{}
-
-	r.GET("/posts", h.GetPosts)
-	r.GET("/posts/:id", h.GetPostByID)
-	r.POST("/posts", h.CreatePost)
-	r.DELETE("/posts/:id", h.DeletePost)
-	r.PUT("/posts/:id", h.UpdatePost)
 	r.POST("/login", h.Login)
+
+	auth := r.Group("/")
+	auth.Use(middleware.Auth())
+
+	auth.GET("/posts", h.GetPosts)
+	auth.GET("/posts/:id", h.GetPostByID)
+	auth.POST("/posts", h.CreatePost)
+	auth.DELETE("/posts/:id", h.DeletePost)
+	auth.PUT("/posts/:id", h.UpdatePost)
 
 	return r
 }

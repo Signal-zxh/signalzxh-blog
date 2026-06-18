@@ -27,7 +27,7 @@ func GetPosts() ([]model.Post, error) {
 	return db.GetPosts()
 }
 
-func CreatePost(title string) (int64, error) {
+func CreatePost(title string, userID int) (int64, error) {
 	if title == "" || len(title) > 100 {
 		return 0, ErrInvalidInput
 	}
