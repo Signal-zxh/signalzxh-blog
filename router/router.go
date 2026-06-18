@@ -19,6 +19,11 @@ func SetupRouter() *gin.Engine {
 		c.File("./static/index.html")
 	})
 
+	// 管理页面
+	r.GET("/admin", func(c *gin.Context) {
+		c.File("./static/admin.html")
+	})
+
 	// handler
 	h := &handler.PostHandler{}
 	r.POST("/login", h.Login)

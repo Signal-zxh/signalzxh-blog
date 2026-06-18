@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+set -o pipefail
 BASE="http://localhost:8080"
 
 echo "===================="
