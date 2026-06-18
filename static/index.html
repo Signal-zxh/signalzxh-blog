@@ -17,7 +17,59 @@
     <div style="display:flex; justify-content:center; align-items:center; height:60vh; flex-direction:column;">
         <h1 style="font-size:2.5rem; font-weight:600; background:linear-gradient(135deg,#f0f2f5,#94a3b8); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">这是我的个人网站</h1>
         <p style="color:#9aa4b2; margin-top:12px; font-size:1.1rem;">正在建设中...</p>
+        <div id="posts"></div>
+
+            <button onclick="loadPosts()" style="margin-top:20px;padding:8px 16px;border:1px solid #23272b;background:#111;color:#fff;border-radius:8px;">
+                刷新文章
+            </button>
+        </div>
     </div>
-</div>
+<script>
+async function loadPosts() {
+    const container = document.getElementById("posts")
+
+    try {
+        const res = await fetch("/posts")
+        console.log("status:", res.status)
+
+        const text = await res.text()
+        console.log("raw response:", text)
+
+        let json
+        try {
+            json = JSON.parse(text)
+        } catch (e) {
+            container.innerHTML = "❌ JSON解析失败"
+            return
+        }
+
+        if (json.code !== 0) {
+            container.innerHTML = "❌ API错误: " + json.message
+            return
+        }
+
+        const posts = json.data || []
+
+        if (posts.length === 0) {
+            container.innerHTML = "暂无文章"
+            return
+        }
+
+        container.innerHTML = posts.map(post => `
+            <div class="post-item">
+                <h2>${post.title}</h2>
+                <div class="post-meta"></div>
+                <div class="post-excerpt">${post.content}</div>
+            </div>
+        `).join("")
+    } catch (e) {
+        console.error(e)
+        container.innerHTML = "❌ 请求失败"
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadPosts)
+</script>          
 </body>
+
 </html>
