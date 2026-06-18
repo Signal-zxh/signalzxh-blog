@@ -11,11 +11,11 @@
             font-family: "Inter", -apple-system, sans-serif;
             background: #0b0d0f;
             color: #ecedee;
-            padding-top: 100px;
+            padding-top: 80px;
             min-height: 100vh;
         }
         .container {
-            max-width: 1200px;
+            max-width: 720px;
             margin: 0 auto;
             padding: 0 24px;
         }
@@ -24,17 +24,17 @@
             top: 0;
             left: 0;
             right: 0;
-            z-index: 100;
+            z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
-            background: rgba(11, 13, 15, 0.95);
+            padding: 16px 24px;
+            background: rgba(11, 13, 15, 0.98);
             border-bottom: 1px solid #23272b;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
         }
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             background: linear-gradient(135deg, #f0f2f5, #94a3b8);
             -webkit-background-clip: text;
@@ -43,26 +43,39 @@
         }
         .nav {
             display: flex;
-            gap: 24px;
+            gap: 20px;
             margin-left: auto;
-            margin-right: 24px;
+            margin-right: 20px;
         }
         .nav a {
             color: #9aa4b2;
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 0.95rem;
             padding: 6px 12px;
-            border-radius: 8px;
-            transition: 0.2s;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
         .nav a:hover, .nav a.active {
             color: #fff;
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(59, 130, 246, 0.25);
         }
         .header-right {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             align-items: center;
+        }
+        .admin-link {
+            color: #6b7a8d;
+            cursor: pointer;
+            padding: 6px 14px;
+            border: 1px solid #23272b;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .admin-link:hover {
+            border-color: #3b82f6;
+            color: #fff;
         }
         .card {
             background: #1a1a1a;
@@ -74,16 +87,22 @@
         .card h3 {
             color: #fff;
             margin-bottom: 12px;
+            font-size: 1.25rem;
         }
         .card p {
             color: #9aa4b2;
             line-height: 1.6;
         }
+        .card ul {
+            color: #9aa4b2;
+            margin-top: 12px;
+            padding-left: 20px;
+        }
     </style>
 </head>
 <body>
 <div class="header">
-    <span class="logo">✦ Signal ZXH</span>
+    <span class="logo">✦ Signal </span>
     
     <div class="nav">
         <a href="/">首页</a>
@@ -93,7 +112,7 @@
     </div>
     
     <div class="header-right">
-        <span onclick="showLoginModal()" style="color:#6b7a8d; cursor:pointer; padding:6px 14px; border:1px solid #23272b; border-radius:20px; font-size:0.85rem;">管理</span>
+        <span onclick="showLoginModal()" class="admin-link">管理</span>
     </div>
 </div>
 
@@ -101,7 +120,7 @@
     <div class="card">
         <h3>🛠️ 工具页面</h3>
         <p>这里是工具页面的占位内容。您可以在这里添加各种实用工具，例如：</p>
-        <ul style="color:#9aa4b2; margin-top:12px; padding-left:20px;">
+        <ul>
             <li>在线代码编辑器</li>
             <li>Markdown 转换器</li>
             <li>时间戳工具</li>
@@ -117,7 +136,7 @@
 </div>
 
 <!-- 登录模态框 -->
-<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
+<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); justify-content:center; align-items:center; z-index:2000;">
     <div style="background:#1a1a1a; padding:24px; border-radius:12px; width:320px; border:1px solid #23272b;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="color:#fff; margin:0;">登录管理</h2>

@@ -11,7 +11,7 @@
             font-family: "Inter", -apple-system, sans-serif;
             background: #0b0d0f;
             color: #ecedee;
-            padding-top: 100px;
+            padding-top: 80px;
             min-height: 100vh;
         }
         .container {
@@ -24,54 +24,18 @@
             top: 0;
             left: 0;
             right: 0;
-            z-index: 100;
+            z-index: 1000;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 24px;
-            background: rgba(11, 13, 15, 0.95);
+            padding: 16px 24px;
+            background: rgba(11, 13, 15, 0.98);
             border-bottom: 1px solid #23272b;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
         }
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #f0f2f5, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .admin-link {
-            color: #6b7a8d;
-            text-decoration: none;
-            font-size: 0.85rem;
-            padding: 6px 14px;
-            border: 1px solid #23272b;
-            border-radius: 20px;
-            transition: 0.2s;
-            cursor: pointer;
-        }
-        .admin-link:hover {
-            border-color: #3b82f6;
-            color: #ecedee;
-        }
-        .post-item {
-            padding: 24px 0;
-            border-bottom: 1px solid #181b1e;
-        }
-        .post-item h2 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .post-excerpt {
-            color: #9aa4b2;
-            font-size: 0.95rem;
-            margin-top: 6px;
-        }
-        .hero-title {
-            font-size: 2.5rem;
-            font-weight: 600;
             background: linear-gradient(135deg, #f0f2f5, #94a3b8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -79,32 +43,74 @@
         }
         .nav {
             display: flex;
-            gap: 24px;
+            gap: 20px;
             margin-left: auto;
-            margin-right: 24px;
+            margin-right: 20px;
         }
         .nav a {
             color: #9aa4b2;
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 0.95rem;
             padding: 6px 12px;
-            border-radius: 8px;
-            transition: 0.2s;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
         .nav a:hover, .nav a.active {
             color: #fff;
-            background: rgba(59, 130, 246, 0.2);
+            background: rgba(59, 130, 246, 0.25);
         }
         .header-right {
             display: flex;
-            gap: 20px;
+            gap: 16px;
             align-items: center;
+        }
+        .admin-link {
+            color: #6b7a8d;
+            cursor: pointer;
+            padding: 6px 14px;
+            border: 1px solid #23272b;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .admin-link:hover {
+            border-color: #3b82f6;
+            color: #fff;
+        }
+        .post-item {
+            padding: 20px 0;
+            border-bottom: 1px solid #181b1e;
+        }
+        .post-item h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+        .post-excerpt {
+            color: #9aa4b2;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .hero-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f0f2f5, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .hero-subtitle {
+            color: #9aa4b2;
+            font-size: 1.05rem;
+            margin-bottom: 30px;
         }
     </style>
 </head>
 <body>
 <div class="header">
-    <span class="logo">✦ Signal ZXH</span>
+    <span class="logo">✦ Signal </span>
     
     <div class="nav">
         <a href="/" class="active">首页</a>
@@ -114,23 +120,25 @@
     </div>
     
     <div class="header-right">
-        <span onclick="showLoginModal()" style="color:#6b7a8d; cursor:pointer; padding:6px 14px; border:1px solid #23272b; border-radius:20px; font-size:0.85rem;">管理</span>
+        <span onclick="showLoginModal()" class="admin-link">管理</span>
     </div>
 </div>
 
 <div class="container">
-    <div style="display:flex; justify-content:center; align-items:center; height:60vh; flex-direction:column;">
+    <div style="display:flex; justify-content:center; align-items:flex-start; min-height: calc(100vh - 120px); flex-direction:column;">
         <h1 class="hero-title">这是我的个人网站</h1>
-        <p style="color:#9aa4b2; margin-top:12px; font-size:1.1rem;">正在建设中...</p>
-        <div id="posts"></div>
+        <p class="hero-subtitle">正在建设中...</p>
+        
+        <div id="posts" style="width:100%;"></div>
 
-        <button onclick="loadPosts()" style="margin-top:20px;padding:8px 16px;border:1px solid #23272b;background:#111;color:#fff;border-radius:8px;">
+        <button onclick="loadPosts()" style="margin-top:20px;padding:10px 20px;border:1px solid #23272b;background:#111;color:#fff;border-radius:8px;cursor:pointer;transition:all 0.2s;">
             刷新文章
         </button>
     </div>
 </div>
 
-<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
+<!-- 登录模态框 -->
+<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); justify-content:center; align-items:center; z-index:2000;">
     <div style="background:#1a1a1a; padding:24px; border-radius:12px; width:320px; border:1px solid #23272b;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h2 style="color:#fff; margin:0;">登录管理</h2>
@@ -223,12 +231,12 @@ async function loadPosts() {
         try {
             json = JSON.parse(text)
         } catch (e) {
-            container.innerHTML = "❌ JSON解析失败"
+            container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ JSON解析失败</p>"
             return
         }
 
         if (json.code !== 0) {
-            container.innerHTML = "❌ API错误: " + json.message
+            container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ API错误: " + json.message + "</p>"
             return
         }
 
@@ -247,7 +255,7 @@ async function loadPosts() {
         `).join("")
     } catch (e) {
         console.error(e)
-        container.innerHTML = "❌ 请求失败"
+        container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ 请求失败</p>"
     }
 }
 

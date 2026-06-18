@@ -1,0 +1,141 @@
+<div class="header">
+    <span class="logo">✦ Signal </span>
+    
+    <div class="nav">
+        <a href="/" class="nav-link" data-page="index">首页</a>
+        <a href="/tools" class="nav-link" data-page="tools">工具</a>
+        <a href="/games" class="nav-link" data-page="games">游戏</a>
+        <a href="/about" class="nav-link" data-page="about">关于</a>
+    </div>
+    
+    <div class="header-right">
+        <span id="loginBtn" onclick="showLoginModal()" style="color:#6b7a8d; cursor:pointer; padding:6px 14px; border:1px solid #23272b; border-radius:20px; font-size:0.85rem;">管理</span>
+        <span id="logoutBtn" style="display:none; color:#ef4444; cursor:pointer;">退出登录</span>
+    </div>
+</div>
+
+<!-- 登录模态框 -->
+<div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:1000;">
+    <div style="background:#1a1a1a; padding:24px; border-radius:12px; width:320px; border:1px solid #23272b;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="color:#fff; margin:0;">登录管理</h2>
+            <span onclick="hideLoginModal()" style="color:#9aa4b2; cursor:pointer; font-size:20px;">&times;</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input id="loginUsername" placeholder="用户名" style="padding:10px; border:1px solid #23272b; border-radius:8px; background:#111; color:#fff;" />
+            <input id="loginPassword" type="password" placeholder="密码" style="padding:10px; border:1px solid #23272b; border-radius:8px; background:#111; color:#fff;" />
+            <button onclick="login()" style="padding:10px; border:none; background:#3b82f6; color:#fff; border-radius:8px; cursor:pointer;">
+                登录
+            </button>
+            <div id="loginResult" style="color:#9aa4b2; text-align:center; font-size:14px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 页面加载时检查登录状态
+document.addEventListener('DOMContentLoaded', function() {
+    updateNavbar()
+})
+
+function updateNavbar() {
+    const token = localStorage.getItem('token')
+    const loginBtn = document.getElementById('loginBtn')
+    const logoutBtn = document.getElementById('logoutBtn')
+    
+    if (token) {
+        loginBtn.style.display = 'none'
+        logoutBtn.style.display = 'inline'
+        logoutBtn.onclick = logout
+    } else {
+        loginBtn.style.display = 'inline'
+        logoutBtn.style.display = 'none'
+    }
+    
+    // 设置当前页面导航高亮
+    const currentPath = window.location.pathname
+    const navLinks = document.querySelectorAll('.nav-link')
+    
+    navLinks.forEach(link => {
+        link.classList.remove('active')
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active')
+        }
+        // 特殊处理管理页面
+        if (currentPath === '/admin' && link.getAttribute('href') === '/') {
+            link.classList.add('active')
+        }
+    })
+}
+
+function showLoginModal() {
+    document.getElementById('loginModal').style.display = 'flex'
+}
+
+function hideLoginModal() {
+    document.getElementById('loginModal').style.display = 'none'
+    document.getElementById('loginResult').innerHTML = ''
+    document.getElementById('loginUsername').value = ''
+    document.getElementById('loginPassword').value = ''
+}
+
+document.getElementById('loginModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideLoginModal()
+    }
+})
+
+async function login() {
+    const username = document.getElementById('loginUsername').value
+    const password = document.getElementById('loginPassword').value
+    const resultDiv = document.getElementById('loginResult')
+
+    if (!username.trim()) {
+        resultDiv.innerHTML = '❌ 请输入用户名'
+        return
+    }
+    if (!password.trim()) {
+        resultDiv.innerHTML = '❌ 请输入密码'
+        return
+    }
+
+    try {
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username.trim(), password: password.trim() })
+        })
+
+        const text = await res.text()
+        let json
+        try {
+            json = JSON.parse(text)
+        } catch (e) {
+            resultDiv.innerHTML = '❌ 服务器返回格式错误'
+            return
+        }
+
+        if (json.code === 0) {
+            localStorage.setItem('token', json.data.token)
+            resultDiv.innerHTML = '✅ 登录成功！'
+            updateNavbar()
+            
+            setTimeout(() => {
+                hideLoginModal()
+                window.location.href = '/admin'
+            }, 1000)
+        } else {
+            resultDiv.innerHTML = '❌ ' + json.message
+        }
+    } catch (e) {
+        console.error(e)
+        resultDiv.innerHTML = '❌ 请求失败'
+    }
+}
+
+function logout() {
+    localStorage.removeItem('token')
+    updateNavbar()
+    window.location.href = '/'
+}
+</script>
