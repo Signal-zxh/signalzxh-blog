@@ -24,6 +24,21 @@ func SetupRouter() *gin.Engine {
 		c.File("./static/admin.html")
 	})
 
+	// 工具页面（公开）
+	r.GET("/tools", func(c *gin.Context) {
+		c.File("./static/tools.html")
+	})
+
+	// 游戏页面（公开）
+	r.GET("/games", func(c *gin.Context) {
+		c.File("./static/games.html")
+	})
+
+	// 关于页面（公开）
+	r.GET("/about", func(c *gin.Context) {
+		c.File("./static/about.html")
+	})
+
 	// handler
 	h := &handler.PostHandler{}
 	r.POST("/login", h.Login)

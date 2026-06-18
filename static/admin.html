@@ -5,42 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理后台 - Signal ZXH</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: "Inter", -apple-system, sans-serif;
+            background: #0b0d0f;
+            color: #ecedee;
+            padding-top: 100px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            background: rgba(11, 13, 15, 0.95);
+            border-bottom: 1px solid #23272b;
+            backdrop-filter: blur(10px);
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f0f2f5, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .nav {
+            display: flex;
+            gap: 24px;
+            margin-left: auto;
+            margin-right: 24px;
+        }
+        .nav a {
+            color: #9aa4b2;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            transition: 0.2s;
+        }
+        .nav a:hover, .nav a.active {
+            color: #fff;
+            background: rgba(59, 130, 246, 0.2);
+        }
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+    </style>
 </head>
 <body>
+<div class="header">
+    <span class="logo">✦ Signal ZXH</span>
+    
+    <!-- 导航菜单 -->
+    <div class="nav">
+        <a href="/admin" class="active">文章</a>
+        <a href="/admin/tools">工具</a>
+        <a href="/admin/games">游戏</a>
+        <a href="/admin/about">关于</a>
+    </div>
+    
+    <div class="header-right">
+        <a href="/" style="color:#9aa4b2; text-decoration:none;">首页</a>
+        <span onclick="logout()" style="color:#ef4444; cursor:pointer;">退出登录</span>
+    </div>
+</div>
+
 <div class="container">
-    <div class="header">
-        <span class="logo">✦ Signal ZXH</span>
-        <div style="display:flex; gap:20px; align-items:center;">
-            <a href="/" style="color:#9aa4b2; text-decoration:none;">首页</a>
-            <span onclick="logout()" style="color:#ef4444; cursor:pointer;">退出登录</span>
+    <!-- 发布文章表单 -->
+    <div style="background:#1a1a1a; padding:24px; border-radius:12px; border:1px solid #23272b; margin-bottom:20px;">
+        <h2 style="color:#fff; margin:0 0 20px 0;">发布新文章</h2>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <input id="postTitle" placeholder="文章标题" style="padding:12px; border:1px solid #23272b; border-radius:8px; background:#111; color:#fff; font-size:16px;" />
+            <textarea id="postContent" placeholder="文章内容" rows="6" style="padding:12px; border:1px solid #23272b; border-radius:8px; background:#111; color:#fff; font-size:14px; resize:vertical;"></textarea>
+            <button onclick="createPost()" style="padding:12px; border:none; background:#3b82f6; color:#fff; border-radius:8px; cursor:pointer; font-size:16px;">
+                发布文章
+            </button>
+            <div id="createResult" style="color:#9aa4b2; text-align:center; font-size:14px;"></div>
         </div>
     </div>
 
-    <div style="max-width:800px; margin:0 auto; padding:20px;">
-        <!-- 发布文章表单 -->
-        <div style="background:#1a1a1a; padding:24px; border-radius:12px; border:1px solid #23272b; margin-bottom:20px;">
-            <h2 style="color:#fff; margin:0 0 20px 0;">发布新文章</h2>
-            <div style="display:flex; flex-direction:column; gap:12px;">
-                <input id="postTitle" placeholder="文章标题" style="padding:12px; border:1px solid #23272b; border-radius:8px; background:#111; color:#fff; font-size:16px;" />
-                <textarea id="postContent" placeholder="文章内容" rows="6" style="padding:12px; border:1px solid #23272b; border-radius:8px; background:#111; color:#fff; font-size:14px; resize:vertical;"></textarea>
-                <button onclick="createPost()" style="padding:12px; border:none; background:#3b82f6; color:#fff; border-radius:8px; cursor:pointer; font-size:16px;">
-                    发布文章
-                </button>
-                <div id="createResult" style="color:#9aa4b2; text-align:center; font-size:14px;"></div>
-            </div>
-        </div>
-
-        <!-- 文章列表 -->
-        <div style="background:#1a1a1a; padding:24px; border-radius:12px; border:1px solid #23272b;">
-            <h2 style="color:#fff; margin:0 0 20px 0;">文章管理</h2>
-            <div id="postsList"></div>
-        </div>
+    <!-- 文章列表 -->
+    <div style="background:#1a1a1a; padding:24px; border-radius:12px; border:1px solid #23272b; margin-bottom:40px;">
+        <h2 style="color:#fff; margin:0 0 20px 0;">文章管理</h2>
+        <div id="postsList"></div>
     </div>
 </div>
 
 <script>
-// 检查是否已登录
 function checkLogin() {
     const token = localStorage.getItem("token")
     if (!token) {
@@ -50,13 +115,11 @@ function checkLogin() {
     return token
 }
 
-// 退出登录
 function logout() {
     localStorage.removeItem("token")
     window.location.href = "/"
 }
 
-// 发布文章
 async function createPost() {
     const token = checkLogin()
     if (!token) return
@@ -107,7 +170,6 @@ async function createPost() {
     }
 }
 
-// 加载文章列表
 async function loadPosts() {
     const token = checkLogin()
     if (!token) return
@@ -141,7 +203,7 @@ async function loadPosts() {
         }
 
         container.innerHTML = posts.map(post => `
-            <div style="border-bottom:1px solid #23272b; padding:16px 0; last-child { border-bottom:none; }">
+            <div style="border-bottom:1px solid #23272b; padding:16px 0;">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                     <div>
                         <h3 style="color:#fff; margin:0 0 8px 0;">${post.title}</h3>
@@ -161,7 +223,6 @@ async function loadPosts() {
     }
 }
 
-// 删除文章
 async function deletePost(id) {
     const token = checkLogin()
     if (!token) return
@@ -191,12 +252,10 @@ async function deletePost(id) {
     }
 }
 
-// 编辑文章（简单实现）
 function editPost(id) {
     alert("编辑功能开发中，文章ID: " + id)
 }
 
-// 页面加载时检查登录并加载文章
 document.addEventListener("DOMContentLoaded", function() {
     checkLogin()
     loadPosts()
