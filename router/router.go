@@ -39,6 +39,11 @@ func SetupRouter() *gin.Engine {
 		c.File("./static/about.html")
 	})
 
+	// 文章详情页（公开）
+	r.GET("/post-detail.html", func(c *gin.Context) {
+		c.File("./static/post-detail.html")
+	})
+
 	// handler
 	h := &handler.PostHandler{}
 	r.POST("/login", h.Login)
