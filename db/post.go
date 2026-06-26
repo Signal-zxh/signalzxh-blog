@@ -11,7 +11,8 @@ var ErrNoRowsAffected = errors.New("no rows affected")
 var ErrNotFound = errors.New("not found")
 
 func GetPosts() ([]model.Post, error) {
-	rows, err := DB.Query("SELECT id, title, content, user_id FROM posts")
+	// 倒序显示
+	rows, err := DB.Query("SELECT id, title, content, user_id FROM posts ORDER BY id DESC")
 	if err != nil {
 		return nil, err
 	}
