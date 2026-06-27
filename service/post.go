@@ -11,6 +11,8 @@ import (
 	"github.com/Signal-zxh/signal-zxh/model"
 )
 
+const RedisNil = "__nil__"
+
 var (
 	ErrNotFound     = errors.New("not found")
 	ErrInvalidInput = errors.New("invalid input")
@@ -22,6 +24,11 @@ func GetPostByID(id int) (model.Post, error) {
 	val, err := db.RDB.Get(context.Background(), key).Result()
 	if err == nil {
 		fmt.Println("hit redis")
+		// 缓存中为__nil__，返回Redis nil,防止穿透
+		if val == RedisNil {
+			return model.Post{}, ErrNotFound
+		}
+
 		var post model.Post
 		_ = json.Unmarshal([]byte(val), &post)
 		return post, nil
@@ -30,6 +37,14 @@ func GetPostByID(id int) (model.Post, error) {
 	post, err := db.GetPostByID(id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
+			// 写入空置缓存，防止穿透
+			db.RDB.Set(
+				context.Background(),
+				key,
+				RedisNil,
+				1*time.Minute,
+			)
+
 			return model.Post{}, ErrNotFound
 		}
 		return model.Post{}, err
