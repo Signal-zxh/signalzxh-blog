@@ -9,6 +9,7 @@ RUN CGO_ENABLED=0 go build -o signal-zxh .
 
 FROM alpine:3.24 AS final
 
+RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 COPY --from=builder /app/signal-zxh .
