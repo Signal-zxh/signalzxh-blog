@@ -47,7 +47,31 @@ func GetPostByID(id int) (model.Post, error) {
 }
 
 func GetPosts() ([]model.Post, error) {
-	return db.GetPosts()
+	// 从redis中查询帖子列表
+	key := "posts:list"
+	val, err := db.RDB.Get(context.Background(), key).Result()
+	if err == nil {
+		fmt.Println("hit redis")
+
+		var posts []model.Post
+		_ = json.Unmarshal([]byte(val), &posts)
+		return posts, nil
+	}
+	// 从数据库中查询帖子列表
+	posts, err := db.GetPosts()
+	if err != nil {
+		return nil, err
+	}
+	// 回写redis缓存
+	b, _ := json.Marshal(posts)
+	db.RDB.Set(
+		context.Background(),
+		key,
+		b,
+		10*time.Minute,
+	)
+	// 回写redis缓存，确保下次查询获取最新数据/
+	return posts, nil
 }
 
 func CreatePost(title, content string, userID int) (int64, error) {
