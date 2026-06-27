@@ -271,15 +271,23 @@
         </div>
     </div>
 
+    <!-- HTTP 探针 -->
     <div class="card">
-        <h3>🛠️ 更多工具</h3>
-        <p>更多实用工具正在开发中...敬请期待！</p>
-        <ul>
-            <li>在线代码编辑器</li>
-            <li>Markdown 转换器</li>
-            <li>时间戳工具</li>
-            <li>JSON 格式化工具</li>
-        </ul>
+        <h3>🔍 HTTP 探针</h3>
+        <div style="margin-bottom: 12px;">
+            <input type="text" id="probeUrl" placeholder="输入 URL，如 https://example.com" 
+                   style="width: 100%; padding: 10px; border: 1px solid #23272b; border-radius: 8px; background: #111; color: #fff; font-size: 14px;">
+        </div>
+        <button onclick="doHttpProbe()" style="padding: 10px 20px; border: none; background: #3b82f6; color: #fff; border-radius: 8px; cursor: pointer; font-size: 14px;">
+            检测
+        </button>
+        <div id="probeResult" style="margin-top: 16px; padding: 12px; background: #111; border-radius: 8px; display: none;">
+            <div style="color: #9aa4b2; font-size: 14px;">
+                <div id="probeStatus" style="margin-bottom: 8px;"></div>
+                <div id="probeTime" style="margin-bottom: 8px;"></div>
+                <div id="probeMsg"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -579,6 +587,55 @@ document.addEventListener('click', function() {
             setMode('work');
             document.querySelectorAll('.mode-btn')[0].classList.add('active');
         }
+    }
+});
+
+// HTTP 探针函数
+async function doHttpProbe() {
+    const url = document.getElementById('probeUrl').value.trim();
+    const resultDiv = document.getElementById('probeResult');
+    const statusDiv = document.getElementById('probeStatus');
+    const timeDiv = document.getElementById('probeTime');
+    const msgDiv = document.getElementById('probeMsg');
+    
+    if (!url) {
+        alert('请输入 URL');
+        return;
+    }
+    
+    resultDiv.style.display = 'block';
+    statusDiv.textContent = '🔄 检测中...';
+    timeDiv.textContent = '';
+    msgDiv.textContent = '';
+    
+    try {
+        const res = await fetch('/api/tools/http', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url })
+        });
+        
+        const json = await res.json();
+        
+        if (json.code === 0) {
+            const data = json.data;
+            statusDiv.innerHTML = `✅ <span style="color: #22c55e;">${data.status}</span>`;
+            timeDiv.textContent = `⏱ ${data.time_ms}ms`;
+            msgDiv.textContent = '';
+        } else {
+            statusDiv.innerHTML = `❌ <span style="color: #ef4444;">失败</span>`;
+            msgDiv.textContent = json.message || '请求失败';
+        }
+    } catch (e) {
+        statusDiv.innerHTML = `❌ <span style="color: #ef4444;">网络错误</span>`;
+        msgDiv.textContent = e.message || '无法连接到服务器';
+    }
+}
+
+// 回车键触发检测
+document.getElementById('probeUrl').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        doHttpProbe();
     }
 });
 </script>

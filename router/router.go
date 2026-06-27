@@ -57,5 +57,9 @@ func SetupRouter() *gin.Engine {
 	auth.DELETE("/posts/:id", h.DeletePost)
 	auth.PUT("/posts/:id", h.UpdatePost)
 
+	tools := r.Group("/api/tools")
+	t := &handler.ToolHandler{}
+	tools.POST("/http", t.HttpProbe)
+
 	return r
 }

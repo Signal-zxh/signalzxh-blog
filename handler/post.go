@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/Signal-zxh/signal-zxh/model"
 	"github.com/Signal-zxh/signal-zxh/service"
@@ -13,6 +14,7 @@ import (
 )
 
 type PostHandler struct{}
+type ToolHandler struct{}
 
 func (h *PostHandler) GetPosts(c *gin.Context) {
 	posts, err := service.GetPosts()
@@ -166,5 +168,35 @@ func (h *PostHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, model.Success(gin.H{
 		"token": token,
+	}))
+}
+
+func (t *ToolHandler) HttpProbe(c *gin.Context) {
+	var req struct {
+		URL string `json:"url"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, model.Fail(err.Error()))
+		return
+	}
+	start := time.Now()
+	// 校验URL是否为空
+	if req.URL == "" {
+		c.JSON(http.StatusBadRequest, model.Fail("url is empty"))
+		return
+	}
+	// 发送HTTP请求
+	resp, err := http.Get(req.URL)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
+		return
+	}
+	defer resp.Body.Close()
+	cost := time.Since(start)
+	// 返回响应状态码
+	c.JSON(http.StatusOK, model.Success(gin.H{
+		"status":  resp.StatusCode,
+		"time_ms": cost.Milliseconds(),
 	}))
 }

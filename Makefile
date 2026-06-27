@@ -18,13 +18,13 @@ stop:
 
 restart: 
 	@make stop 
-	@makedev
+	@make dev
 
 redis:
 	docker compose exec redis redis-cli
 
 mysql:
-	docker compose exec mysql  mysql -uroot -p
+	docker compose exec mysql mysql -uroot -p
 
 test:
 	@bash scripts/api.sh
