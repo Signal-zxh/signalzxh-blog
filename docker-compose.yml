@@ -43,8 +43,8 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
-    mem_limit: 300m
-    memswap_limit: 300m
+    mem_limit: 256m
+    memswap_limit: 256m
 
   redis: 
     image: redis:7.2-alpine
@@ -57,8 +57,8 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
-    mem_limit: 200m
-    memswap_limit: 200m
+    mem_limit: 64m
+    memswap_limit: 64m
 volumes:
   mysql-data:
   redis-data:
