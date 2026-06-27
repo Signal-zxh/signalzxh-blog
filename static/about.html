@@ -146,13 +146,23 @@
 
     <div class="card">
         <h3>📝 网站介绍</h3>
-        <p>这是一个使用 Go + Gin + MySQL 构建的个人网站。</p>
+        <p>这是一个基于 Go + Gin + MySQL + Redis 构建的全栈个人网站，包含文章管理、JWT认证、缓存机制和实用工具。</p>
         <p style="margin-top:8px;">技术栈：</p>
         <ul>
-            <li>后端：Go + Gin</li>
-            <li>数据库：MySQL</li>
-            <li>前端：HTML + CSS + JavaScript</li>
-            <li>部署：Docker</li>
+            <li>后端：Go 1.24 + Gin</li>
+            <li>数据库：MySQL 9.7</li>
+            <li>缓存：Redis 7.2（文章详情缓存，10分钟过期）</li>
+            <li>认证：JWT (golang-jwt/jwt/v5)</li>
+            <li>前端：HTML + CSS + JavaScript（响应式设计）</li>
+            <li>部署：Docker + Docker Compose</li>
+        </ul>
+        <p style="margin-top:12px;">功能特性：</p>
+        <ul>
+            <li>📝 文章 CRUD（创建、阅读、更新、删除）</li>
+            <li>🔐 JWT 安全认证</li>
+            <li>⚡ Redis 缓存加速</li>
+            <li>🍅 番茄钟专注工具</li>
+            <li>📱 移动端响应式适配</li>
         </ul>
     </div>
         <div class="card">
