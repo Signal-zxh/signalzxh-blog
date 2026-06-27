@@ -1,8 +1,11 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/Signal-zxh/signal-zxh/handler"
 	"github.com/Signal-zxh/signal-zxh/middleware"
+	"github.com/Signal-zxh/signal-zxh/model"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,6 +14,11 @@ func SetupRouter() *gin.Engine {
 
 	r.Use(middleware.Logger())
 
+	r.GET("/ping", func(c *gin.Context) {
+		c.JSON(http.StatusOK, model.Success(gin.H{
+			"message": "pong",
+		}))
+	})
 	// 静态页面
 	r.Static("/static", "./static")
 
