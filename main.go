@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/Signal-zxh/signal-zxh/db"
 	"github.com/Signal-zxh/signal-zxh/router"
@@ -36,6 +38,11 @@ func main() {
 	defer db.RDB.Close()
 	// 初始化路由
 	r := router.SetupRouter()
+	// 启动pprof服务器
+	go func() {
+		log.Println(http.ListenAndServe(":6060", nil))
+	}()
+
 	// 启动服务器
 	r.Run(":8080") // 监听 8080 端口
 }
