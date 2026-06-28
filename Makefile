@@ -28,3 +28,6 @@ mysql:
 
 test:
 	@bash scripts/api.sh
+
+wrk:
+	wrk -t4 -c100 -d10s http://localhost:8080/posts
