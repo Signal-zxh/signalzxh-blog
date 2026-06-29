@@ -14,8 +14,17 @@ var (
 	ErrInvalidInput = errors.New("invalid input")
 )
 
-func GetPostByID(id int) (model.Post, error) {
-	post, found, err := cache.GetPostByID(id)
+type PostService struct {
+	repo  db.PostRepo
+	cache cache.PostCache
+}
+
+func NewPostService(repo db.PostRepo, c cache.PostCache) *PostService {
+	return &PostService{repo: repo, cache: c}
+}
+
+func (s *PostService) GetPostByID(id int) (model.Post, error) {
+	post, found, err := s.cache.GetPostByID(id)
 	if err == nil && found {
 		if post.ID == 0 {
 			return model.Post{}, ErrNotFound
@@ -23,35 +32,35 @@ func GetPostByID(id int) (model.Post, error) {
 		return post, nil
 	}
 
-	post, err = db.GetPostByID(id)
+	post, err = s.repo.GetPostByID(id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			cache.SetNilPost(id, 1*time.Minute)
+			s.cache.SetNilPost(id, 1*time.Minute)
 			return model.Post{}, ErrNotFound
 		}
 		return model.Post{}, err
 	}
 
-	cache.SetPost(post, 10*time.Minute)
+	s.cache.SetPost(post, 10*time.Minute)
 	return post, nil
 }
 
-func GetPosts() ([]model.Post, error) {
-	posts, found, err := cache.GetPosts()
+func (s *PostService) GetPosts() ([]model.Post, error) {
+	posts, found, err := s.cache.GetPosts()
 	if err == nil && found {
 		return posts, nil
 	}
 
-	posts, err = db.GetPosts()
+	posts, err = s.repo.GetPosts()
 	if err != nil {
 		return nil, err
 	}
 
-	cache.SetPosts(posts, 10*time.Minute)
+	s.cache.SetPosts(posts, 10*time.Minute)
 	return posts, nil
 }
 
-func GetPostsByPage(page, pageSize int) ([]model.Post, int, error) {
+func (s *PostService) GetPostsByPage(page, pageSize int) ([]model.Post, int, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -62,27 +71,27 @@ func GetPostsByPage(page, pageSize int) ([]model.Post, int, error) {
 		pageSize = 100
 	}
 
-	posts, found, err := cache.GetPostsByPage(page, pageSize)
+	posts, found, err := s.cache.GetPostsByPage(page, pageSize)
 	if err == nil && found {
-		count, _ := db.GetPostsCount()
+		count, _ := s.repo.GetPostsCount()
 		return posts, count, nil
 	}
 
-	posts, err = db.GetPostsByPage(page, pageSize)
+	posts, err = s.repo.GetPostsByPage(page, pageSize)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	count, err := db.GetPostsCount()
+	count, err := s.repo.GetPostsCount()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	cache.SetPostsByPage(posts, page, pageSize, 10*time.Minute)
+	s.cache.SetPostsByPage(posts, page, pageSize, 10*time.Minute)
 	return posts, count, nil
 }
 
-func CreatePost(title, content string, userID int) (int64, error) {
+func (s *PostService) CreatePost(title, content string, userID int) (int64, error) {
 	if title == "" || len(title) > 100 {
 		return 0, ErrInvalidInput
 	}
@@ -93,16 +102,16 @@ func CreatePost(title, content string, userID int) (int64, error) {
 		UserID:  userID,
 	}
 
-	id, err := db.CreatePost(post)
+	id, err := s.repo.CreatePost(post)
 	if err != nil {
 		return 0, err
 	}
 
-	cache.InvalidatePosts()
+	s.cache.InvalidatePosts()
 	return id, nil
 }
 
-func UpdatePost(id int, title, content string) error {
+func (s *PostService) UpdatePost(id int, title, content string) error {
 	if title == "" || len(title) > 100 {
 		return ErrInvalidInput
 	}
@@ -113,7 +122,7 @@ func UpdatePost(id int, title, content string) error {
 		Content: content,
 	}
 
-	err := db.UpdatePost(post)
+	err := s.repo.UpdatePost(post)
 	if err != nil {
 		if errors.Is(err, db.ErrNoRowsAffected) {
 			return ErrNotFound
@@ -121,12 +130,12 @@ func UpdatePost(id int, title, content string) error {
 		return err
 	}
 
-	cache.InvalidatePost(id)
+	s.cache.InvalidatePost(id)
 	return nil
 }
 
-func DeletePost(id int) error {
-	err := db.DeletePost(id)
+func (s *PostService) DeletePost(id int) error {
+	err := s.repo.DeletePost(id)
 	if err != nil {
 		if errors.Is(err, db.ErrNoRowsAffected) {
 			return ErrNotFound
@@ -134,6 +143,6 @@ func DeletePost(id int) error {
 		return err
 	}
 
-	cache.InvalidatePost(id)
+	s.cache.InvalidatePost(id)
 	return nil
 }

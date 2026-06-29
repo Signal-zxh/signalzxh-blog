@@ -42,7 +42,8 @@ func TestGetPostByID(t *testing.T) {
 	b, _ := json.Marshal(post)
 	rdb.Set(ctx, key, b, 0)
 
-	gotPost, found, err := GetPostByID(1)
+	cache := &postCache{}
+	gotPost, found, err := cache.GetPostByID(1)
 	if err != nil {
 		t.Errorf("GetPostByID() error = %v", err)
 	}
@@ -65,7 +66,8 @@ func TestGetPostByID_NilPost(t *testing.T) {
 
 	rdb.Set(ctx, key, RedisNil, 0)
 
-	gotPost, found, err := GetPostByID(999)
+	cache := &postCache{}
+	gotPost, found, err := cache.GetPostByID(999)
 	if err != nil {
 		t.Errorf("GetPostByID() error = %v", err)
 	}
@@ -86,7 +88,8 @@ func TestGetPostByID_NotFound(t *testing.T) {
 	key := "post:999"
 	rdb.Del(ctx, key)
 
-	_, found, err := GetPostByID(999)
+	cache := &postCache{}
+	_, found, err := cache.GetPostByID(999)
 	if err != nil && err != redis.Nil {
 		t.Errorf("GetPostByID() error = %v", err)
 	}
@@ -109,7 +112,8 @@ func TestSetPost(t *testing.T) {
 		UserID:  1,
 	}
 
-	err := SetPost(post, 1*time.Minute)
+	cache := &postCache{}
+	err := cache.SetPost(post, 1*time.Minute)
 	if err != nil {
 		t.Errorf("SetPost() error = %v", err)
 	}
@@ -143,7 +147,8 @@ func TestGetPostsByPage(t *testing.T) {
 	b, _ := json.Marshal(posts)
 	rdb.Set(ctx, key, b, 0)
 
-	gotPosts, found, err := GetPostsByPage(1, 10)
+	cache := &postCache{}
+	gotPosts, found, err := cache.GetPostsByPage(1, 10)
 	if err != nil {
 		t.Errorf("GetPostsByPage() error = %v", err)
 	}
@@ -168,7 +173,8 @@ func TestSetPostsByPage(t *testing.T) {
 		{ID: 3, Title: "post 3", Content: "content 3", UserID: 1},
 	}
 
-	err := SetPostsByPage(posts, 2, 5, 1*time.Minute)
+	cache := &postCache{}
+	err := cache.SetPostsByPage(posts, 2, 5, 1*time.Minute)
 	if err != nil {
 		t.Errorf("SetPostsByPage() error = %v", err)
 	}
@@ -194,7 +200,8 @@ func TestInvalidatePost(t *testing.T) {
 	rdb.Del(ctx, "post:1")
 	rdb.Set(ctx, "post:1", "test value", 0)
 
-	err := InvalidatePost(1)
+	cache := &postCache{}
+	err := cache.InvalidatePost(1)
 	if err != nil {
 		t.Errorf("InvalidatePost() error = %v", err)
 	}

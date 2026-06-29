@@ -14,7 +14,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PostHandler struct{}
+type PostHandler struct {
+	postService *service.PostService
+}
+
+func NewPostHandler(postService *service.PostService) *PostHandler {
+	return &PostHandler{postService: postService}
+}
+
 type ToolHandler struct{}
 
 func (h *PostHandler) GetPosts(c *gin.Context) {
@@ -31,7 +38,7 @@ func (h *PostHandler) GetPosts(c *gin.Context) {
 		pageSize = 10
 	}
 
-	posts, total, err := service.GetPostsByPage(page, pageSize)
+	posts, total, err := h.postService.GetPostsByPage(page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.Fail("internal error"))
 		return
@@ -64,7 +71,7 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 
 	uid := userID.(int)
 
-	id, err := service.CreatePost(req.Title, req.Content, uid)
+	id, err := h.postService.CreatePost(req.Title, req.Content, uid)
 	if err != nil {
 		if errors.Is(err, service.ErrInvalidInput) {
 			c.JSON(http.StatusBadRequest, model.Fail("invalid input"))
@@ -99,7 +106,7 @@ func (h *PostHandler) UpdatePost(c *gin.Context) {
 		return
 	}
 
-	err = service.UpdatePost(id, req.Title, req.Content)
+	err = h.postService.UpdatePost(id, req.Title, req.Content)
 	if err != nil {
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, model.Fail("post not found"))
@@ -126,7 +133,7 @@ func (h *PostHandler) DeletePost(c *gin.Context) {
 		return
 	}
 
-	err = service.DeletePost(id)
+	err = h.postService.DeletePost(id)
 	if err != nil {
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, model.Fail("post not found"))
@@ -149,7 +156,7 @@ func (h *PostHandler) GetPostByID(c *gin.Context) {
 		return
 	}
 
-	post, err := service.GetPostByID(id)
+	post, err := h.postService.GetPostByID(id)
 	if err != nil {
 		if errors.Is(err, service.ErrNotFound) {
 			c.JSON(http.StatusNotFound, model.Fail("post not found"))
@@ -200,12 +207,10 @@ func (t *ToolHandler) HttpProbe(c *gin.Context) {
 		return
 	}
 	start := time.Now()
-	// 校验URL是否为空
 	if req.URL == "" {
 		c.JSON(http.StatusBadRequest, model.Fail("url is empty"))
 		return
 	}
-	// 发送HTTP请求
 	resp, err := http.Get(req.URL)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
@@ -213,7 +218,6 @@ func (t *ToolHandler) HttpProbe(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 	cost := time.Since(start)
-	// 返回响应状态码
 	c.JSON(http.StatusOK, model.Success(gin.H{
 		"status":  resp.StatusCode,
 		"time_ms": cost.Milliseconds(),

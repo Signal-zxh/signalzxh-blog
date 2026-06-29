@@ -14,7 +14,23 @@ const (
 	RedisNil = "__nil__"
 )
 
-func GetPostByID(id int) (model.Post, bool, error) {
+type PostCache interface {
+	GetPostByID(id int) (model.Post, bool, error)
+	SetPost(post model.Post, ttl time.Duration) error
+	SetNilPost(id int, ttl time.Duration) error
+	GetPosts() ([]model.Post, bool, error)
+	SetPosts(posts []model.Post, ttl time.Duration) error
+	GetPostsByPage(page, pageSize int) ([]model.Post, bool, error)
+	SetPostsByPage(posts []model.Post, page, pageSize int, ttl time.Duration) error
+	InvalidatePost(id int) error
+	InvalidatePosts() error
+}
+
+type postCache struct{}
+
+var PostCacheImpl = &postCache{}
+
+func (c *postCache) GetPostByID(id int) (model.Post, bool, error) {
 	key := fmt.Sprintf("post:%d", id)
 	val, err := db.RDB.Get(context.Background(), key).Result()
 	if err != nil {
@@ -32,7 +48,7 @@ func GetPostByID(id int) (model.Post, bool, error) {
 	return post, true, nil
 }
 
-func SetPost(post model.Post, ttl time.Duration) error {
+func (c *postCache) SetPost(post model.Post, ttl time.Duration) error {
 	key := fmt.Sprintf("post:%d", post.ID)
 	b, err := json.Marshal(post)
 	if err != nil {
@@ -41,12 +57,12 @@ func SetPost(post model.Post, ttl time.Duration) error {
 	return db.RDB.Set(context.Background(), key, b, ttl).Err()
 }
 
-func SetNilPost(id int, ttl time.Duration) error {
+func (c *postCache) SetNilPost(id int, ttl time.Duration) error {
 	key := fmt.Sprintf("post:%d", id)
 	return db.RDB.Set(context.Background(), key, RedisNil, ttl).Err()
 }
 
-func GetPosts() ([]model.Post, bool, error) {
+func (c *postCache) GetPosts() ([]model.Post, bool, error) {
 	key := "posts:list"
 	val, err := db.RDB.Get(context.Background(), key).Result()
 	if err != nil {
@@ -60,7 +76,7 @@ func GetPosts() ([]model.Post, bool, error) {
 	return posts, true, nil
 }
 
-func SetPosts(posts []model.Post, ttl time.Duration) error {
+func (c *postCache) SetPosts(posts []model.Post, ttl time.Duration) error {
 	key := "posts:list"
 	b, err := json.Marshal(posts)
 	if err != nil {
@@ -69,7 +85,7 @@ func SetPosts(posts []model.Post, ttl time.Duration) error {
 	return db.RDB.Set(context.Background(), key, b, ttl).Err()
 }
 
-func GetPostsByPage(page, pageSize int) ([]model.Post, bool, error) {
+func (c *postCache) GetPostsByPage(page, pageSize int) ([]model.Post, bool, error) {
 	key := fmt.Sprintf("posts:list:page:%d:size:%d", page, pageSize)
 	val, err := db.RDB.Get(context.Background(), key).Result()
 	if err != nil {
@@ -83,7 +99,7 @@ func GetPostsByPage(page, pageSize int) ([]model.Post, bool, error) {
 	return posts, true, nil
 }
 
-func SetPostsByPage(posts []model.Post, page, pageSize int, ttl time.Duration) error {
+func (c *postCache) SetPostsByPage(posts []model.Post, page, pageSize int, ttl time.Duration) error {
 	key := fmt.Sprintf("posts:list:page:%d:size:%d", page, pageSize)
 	b, err := json.Marshal(posts)
 	if err != nil {
@@ -92,7 +108,7 @@ func SetPostsByPage(posts []model.Post, page, pageSize int, ttl time.Duration) e
 	return db.RDB.Set(context.Background(), key, b, ttl).Err()
 }
 
-func InvalidatePost(id int) error {
+func (c *postCache) InvalidatePost(id int) error {
 	ctx := context.Background()
 	db.RDB.Del(ctx, fmt.Sprintf("post:%d", id))
 	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
@@ -102,7 +118,7 @@ func InvalidatePost(id int) error {
 	return nil
 }
 
-func InvalidatePosts() error {
+func (c *postCache) InvalidatePosts() error {
 	ctx := context.Background()
 	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
 	if len(keys) > 0 {

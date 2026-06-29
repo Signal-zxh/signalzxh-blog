@@ -8,8 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAPI(r *gin.Engine) {
-	h := &handler.PostHandler{}
+func RegisterAPI(r *gin.Engine, h *handler.PostHandler) {
 	t := &handler.ToolHandler{}
 
 	r.GET("/ping", func(c *gin.Context) {

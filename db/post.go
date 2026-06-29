@@ -10,8 +10,21 @@ import (
 var ErrNoRowsAffected = errors.New("no rows affected")
 var ErrNotFound = errors.New("not found")
 
-func GetPosts() ([]model.Post, error) {
-	// 倒序显示
+type PostRepo interface {
+	GetPosts() ([]model.Post, error)
+	GetPostsByPage(page, pageSize int) ([]model.Post, error)
+	GetPostsCount() (int, error)
+	CreatePost(post model.Post) (int64, error)
+	UpdatePost(post model.Post) error
+	DeletePost(id int) error
+	GetPostByID(id int) (model.Post, error)
+}
+
+type postRepo struct{}
+
+var PostRepoImpl = &postRepo{}
+
+func (r *postRepo) GetPosts() ([]model.Post, error) {
 	rows, err := DB.Query("SELECT id, title, content, user_id FROM posts ORDER BY id DESC")
 	if err != nil {
 		return nil, err
@@ -36,7 +49,7 @@ func GetPosts() ([]model.Post, error) {
 	return posts, nil
 }
 
-func GetPostsByPage(page, pageSize int) ([]model.Post, error) {
+func (r *postRepo) GetPostsByPage(page, pageSize int) ([]model.Post, error) {
 	offset := (page - 1) * pageSize
 	rows, err := DB.Query(
 		"SELECT id, title, content, user_id FROM posts ORDER BY id DESC LIMIT ? OFFSET ?",
@@ -65,7 +78,7 @@ func GetPostsByPage(page, pageSize int) ([]model.Post, error) {
 	return posts, nil
 }
 
-func GetPostsCount() (int, error) {
+func (r *postRepo) GetPostsCount() (int, error) {
 	var count int
 	err := DB.QueryRow("SELECT COUNT(*) FROM posts").Scan(&count)
 	if err != nil {
@@ -74,7 +87,7 @@ func GetPostsCount() (int, error) {
 	return count, nil
 }
 
-func CreatePost(post model.Post) (int64, error) {
+func (r *postRepo) CreatePost(post model.Post) (int64, error) {
 	res, err := DB.Exec(
 		"INSERT INTO posts(title, content, user_id) VALUES(?, ?,?)",
 		post.Title, post.Content, post.UserID,
@@ -86,7 +99,7 @@ func CreatePost(post model.Post) (int64, error) {
 	return res.LastInsertId()
 }
 
-func UpdatePost(post model.Post) error {
+func (r *postRepo) UpdatePost(post model.Post) error {
 	res, err := DB.Exec("UPDATE posts SET title = ?, content = ? WHERE id = ?", post.Title, post.Content, post.ID)
 	if err != nil {
 		return err
@@ -104,7 +117,7 @@ func UpdatePost(post model.Post) error {
 	return nil
 }
 
-func DeletePost(id int) error {
+func (r *postRepo) DeletePost(id int) error {
 	res, err := DB.Exec("DELETE FROM posts WHERE id = ?", id)
 	if err != nil {
 		return err
@@ -122,7 +135,7 @@ func DeletePost(id int) error {
 	return nil
 }
 
-func GetPostByID(id int) (model.Post, error) {
+func (r *postRepo) GetPostByID(id int) (model.Post, error) {
 	row := DB.QueryRow("SELECT id, title, content, user_id FROM posts WHERE id = ?", id)
 
 	var post model.Post

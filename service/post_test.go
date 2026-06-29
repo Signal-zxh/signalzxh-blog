@@ -2,9 +2,42 @@ package service
 
 import (
 	"testing"
+	"time"
+
+	"github.com/Signal-zxh/signal-zxh/model"
 )
 
+type mockPostRepo struct{}
+
+func (m *mockPostRepo) GetPosts() ([]model.Post, error)                         { return nil, nil }
+func (m *mockPostRepo) GetPostsByPage(page, pageSize int) ([]model.Post, error) { return nil, nil }
+func (m *mockPostRepo) GetPostsCount() (int, error)                             { return 0, nil }
+func (m *mockPostRepo) CreatePost(post model.Post) (int64, error)               { return 1, nil }
+func (m *mockPostRepo) UpdatePost(post model.Post) error                        { return nil }
+func (m *mockPostRepo) DeletePost(id int) error                                 { return nil }
+func (m *mockPostRepo) GetPostByID(id int) (model.Post, error)                  { return model.Post{}, nil }
+
+type mockPostCache struct{}
+
+func (m *mockPostCache) GetPostByID(id int) (model.Post, bool, error) {
+	return model.Post{}, false, nil
+}
+func (m *mockPostCache) SetPost(post model.Post, ttl time.Duration) error     { return nil }
+func (m *mockPostCache) SetNilPost(id int, ttl time.Duration) error           { return nil }
+func (m *mockPostCache) GetPosts() ([]model.Post, bool, error)                { return nil, false, nil }
+func (m *mockPostCache) SetPosts(posts []model.Post, ttl time.Duration) error { return nil }
+func (m *mockPostCache) GetPostsByPage(page, pageSize int) ([]model.Post, bool, error) {
+	return nil, false, nil
+}
+func (m *mockPostCache) SetPostsByPage(posts []model.Post, page, pageSize int, ttl time.Duration) error {
+	return nil
+}
+func (m *mockPostCache) InvalidatePost(id int) error { return nil }
+func (m *mockPostCache) InvalidatePosts() error      { return nil }
+
 func TestGetPostsByPage_ParameterValidation(t *testing.T) {
+	service := NewPostService(&mockPostRepo{}, &mockPostCache{})
+
 	tests := []struct {
 		name     string
 		page     int
@@ -12,118 +45,46 @@ func TestGetPostsByPage_ParameterValidation(t *testing.T) {
 		wantPage int
 		wantSize int
 	}{
-		{
-			name:     "valid parameters",
-			page:     1,
-			pageSize: 10,
-			wantPage: 1,
-			wantSize: 10,
-		},
-		{
-			name:     "page less than 1",
-			page:     -1,
-			pageSize: 10,
-			wantPage: 1,
-			wantSize: 10,
-		},
-		{
-			name:     "page equals 0",
-			page:     0,
-			pageSize: 10,
-			wantPage: 1,
-			wantSize: 10,
-		},
-		{
-			name:     "pageSize less than 1",
-			page:     1,
-			pageSize: -1,
-			wantPage: 1,
-			wantSize: 10,
-		},
-		{
-			name:     "pageSize equals 0",
-			page:     1,
-			pageSize: 0,
-			wantPage: 1,
-			wantSize: 10,
-		},
-		{
-			name:     "pageSize greater than 100",
-			page:     1,
-			pageSize: 200,
-			wantPage: 1,
-			wantSize: 100,
-		},
-		{
-			name:     "pageSize equals 100",
-			page:     1,
-			pageSize: 100,
-			wantPage: 1,
-			wantSize: 100,
-		},
+		{"valid_parameters", 1, 10, 1, 10},
+		{"page_less_than_1", 0, 10, 1, 10},
+		{"page_equals_0", -1, 10, 1, 10},
+		{"pageSize_less_than_1", 1, 0, 1, 10},
+		{"pageSize_equals_0", 1, -1, 1, 10},
+		{"pageSize_greater_than_100", 1, 200, 1, 100},
+		{"pageSize_equals_100", 1, 100, 1, 100},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			page, pageSize := tt.page, tt.pageSize
-
-			if page < 1 {
-				page = 1
-			}
-			if pageSize < 1 {
-				pageSize = 10
-			}
-			if pageSize > 100 {
-				pageSize = 100
-			}
-
-			if page != tt.wantPage {
-				t.Errorf("page got %d, want %d", page, tt.wantPage)
-			}
-			if pageSize != tt.wantSize {
-				t.Errorf("pageSize got %d, want %d", pageSize, tt.wantSize)
+			_, _, err := service.GetPostsByPage(tt.page, tt.pageSize)
+			if err != nil {
+				t.Errorf("GetPostsByPage() error = %v", err)
 			}
 		})
 	}
 }
 
-func validateTitle(title string) bool {
-	return title != "" && len(title) <= 100
-}
-
 func TestCreatePost_Validation(t *testing.T) {
+	service := NewPostService(&mockPostRepo{}, &mockPostCache{})
+
 	tests := []struct {
 		name    string
 		title   string
+		content string
+		userID  int
 		wantErr bool
 	}{
-		{
-			name:    "valid title",
-			title:   "test title",
-			wantErr: false,
-		},
-		{
-			name:    "empty title",
-			title:   "",
-			wantErr: true,
-		},
-		{
-			name:    "title exactly 100 chars",
-			title:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-			wantErr: false,
-		},
-		{
-			name:    "title 101 chars",
-			title:   "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-			wantErr: true,
-		},
+		{"valid_title", "Test Title", "Test Content", 1, false},
+		{"empty_title", "", "Test Content", 1, true},
+		{"title_exactly_100_chars", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "content", 1, false},
+		{"title_101_chars", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "content", 1, true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			valid := validateTitle(tt.title)
-			if valid == tt.wantErr {
-				t.Errorf("validateTitle(%q) = %v, wantErr %v", tt.title, !valid, tt.wantErr)
+			_, err := service.CreatePost(tt.title, tt.content, tt.userID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CreatePost() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

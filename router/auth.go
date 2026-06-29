@@ -6,9 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAuth(r *gin.Engine) {
-	h := &handler.PostHandler{}
-
+func RegisterAuth(r *gin.Engine, h *handler.PostHandler) {
 	auth := r.Group("/")
 	auth.Use(middleware.Auth())
 
