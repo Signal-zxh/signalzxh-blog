@@ -69,15 +69,44 @@ func SetPosts(posts []model.Post, ttl time.Duration) error {
 	return db.RDB.Set(context.Background(), key, b, ttl).Err()
 }
 
+func GetPostsByPage(page, pageSize int) ([]model.Post, bool, error) {
+	key := fmt.Sprintf("posts:list:page:%d:size:%d", page, pageSize)
+	val, err := db.RDB.Get(context.Background(), key).Result()
+	if err != nil {
+		return nil, false, err
+	}
+
+	var posts []model.Post
+	if err := json.Unmarshal([]byte(val), &posts); err != nil {
+		return nil, false, err
+	}
+	return posts, true, nil
+}
+
+func SetPostsByPage(posts []model.Post, page, pageSize int, ttl time.Duration) error {
+	key := fmt.Sprintf("posts:list:page:%d:size:%d", page, pageSize)
+	b, err := json.Marshal(posts)
+	if err != nil {
+		return err
+	}
+	return db.RDB.Set(context.Background(), key, b, ttl).Err()
+}
+
 func InvalidatePost(id int) error {
 	ctx := context.Background()
 	db.RDB.Del(ctx, fmt.Sprintf("post:%d", id))
-	db.RDB.Del(ctx, "posts:list")
+	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
+	if len(keys) > 0 {
+		db.RDB.Del(ctx, keys...)
+	}
 	return nil
 }
 
 func InvalidatePosts() error {
 	ctx := context.Background()
-	db.RDB.Del(ctx, "posts:list")
+	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
+	if len(keys) > 0 {
+		db.RDB.Del(ctx, keys...)
+	}
 	return nil
 }

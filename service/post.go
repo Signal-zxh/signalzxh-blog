@@ -51,6 +51,37 @@ func GetPosts() ([]model.Post, error) {
 	return posts, nil
 }
 
+func GetPostsByPage(page, pageSize int) ([]model.Post, int, error) {
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	posts, found, err := cache.GetPostsByPage(page, pageSize)
+	if err == nil && found {
+		count, _ := db.GetPostsCount()
+		return posts, count, nil
+	}
+
+	posts, err = db.GetPostsByPage(page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	count, err := db.GetPostsCount()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	cache.SetPostsByPage(posts, page, pageSize, 10*time.Minute)
+	return posts, count, nil
+}
+
 func CreatePost(title, content string, userID int) (int64, error) {
 	if title == "" || len(title) > 100 {
 		return 0, ErrInvalidInput

@@ -36,6 +36,44 @@ func GetPosts() ([]model.Post, error) {
 	return posts, nil
 }
 
+func GetPostsByPage(page, pageSize int) ([]model.Post, error) {
+	offset := (page - 1) * pageSize
+	rows, err := DB.Query(
+		"SELECT id, title, content, user_id FROM posts ORDER BY id DESC LIMIT ? OFFSET ?",
+		pageSize, offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []model.Post
+
+	for rows.Next() {
+		var post model.Post
+
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID); err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+}
+
+func GetPostsCount() (int, error) {
+	var count int
+	err := DB.QueryRow("SELECT COUNT(*) FROM posts").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func CreatePost(post model.Post) (int64, error) {
 	res, err := DB.Exec(
 		"INSERT INTO posts(title, content, user_id) VALUES(?, ?,?)",

@@ -20,3 +20,10 @@ func Fail(msg string) Response {
 		Message: msg,
 	}
 }
+
+type PageResponse struct {
+	Data     interface{} `json:"data"`
+	Total    int         `json:"total"`
+	Page     int         `json:"page"`
+	PageSize int         `json:"page_size"`
+}

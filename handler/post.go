@@ -18,13 +18,31 @@ type PostHandler struct{}
 type ToolHandler struct{}
 
 func (h *PostHandler) GetPosts(c *gin.Context) {
-	posts, err := service.GetPosts()
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("page_size", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	posts, total, err := service.GetPostsByPage(page, pageSize)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.Fail("internal error"))
 		return
 	}
 
-	c.JSON(http.StatusOK, model.Success(posts))
+	c.JSON(http.StatusOK, model.Success(model.PageResponse{
+		Data:     posts,
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}))
 }
 
 func (h *PostHandler) CreatePost(c *gin.Context) {
