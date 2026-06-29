@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"testing"
 	"time"
 
@@ -12,8 +13,13 @@ import (
 )
 
 func setupTestRedis(t *testing.T) *redis.Client {
+	addr := os.Getenv("REDIS_ADDR")
+	if addr == "" {
+		addr = "localhost:6379"
+	}
+
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: addr,
 	})
 
 	ctx := context.Background()
