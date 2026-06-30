@@ -5,6 +5,7 @@
 **在线演示**: [http://47.96.119.143/](http://47.96.119.143/)
 
 ![CI](https://github.com/Signal-zxh/signal-zxh/actions/workflows/ci.yml/badge.svg)
+![Docker](https://github.com/Signal-zxh/signal-zxh/actions/workflows/docker.yml/badge.svg)
 ![Go Version](https://img.shields.io/github/go-mod/go-version/Signal-zxh/signal-zxh)
 ![License](https://img.shields.io/github/license/Signal-zxh/signal-zxh)
 ![Code Size](https://img.shields.io/github/languages/code-size/Signal-zxh/signal-zxh)
@@ -19,14 +20,16 @@
 - 🎨 多页面展示（首页、工具、游戏、关于）
 - 🍅 番茄钟工具（专注计时、休息提醒）
 - 📱 移动端响应式设计
-- 🐳 Docker 容器化部署
+- 🐳 Docker 容器化部署（自动构建）
 - 🚀 RESTful API 设计
 - ✅ 完整单元测试（Service层 + Handler层 + Cache层）
 - 🔄 GitHub Actions CI/CD 集成
+- 🔍 golangci-lint 代码质量检查
+- 🏥 健康检查端点（/health）
 
 ## 技术栈
 
-- **后端**: Go 1.24.0 + Gin
+- **后端**: Go 1.26.4 + Gin
 - **数据库**: MySQL 9.7
 - **缓存**: Redis 7.2
 - **认证**: JWT (golang-jwt/jwt/v5)
@@ -64,9 +67,11 @@ go mod download
 go run main.go
 ```
 
-  服务将在 http://localhost:8080 启动
+服务将在 http://localhost:8080 启动
 
 ### Docker 部署
+
+#### 使用 Docker Compose（推荐）
 
 1. 配置环境变量
 ```bash
@@ -83,6 +88,25 @@ docker-compose up -d
 3. 查看日志
 ```bash
 docker-compose logs -f signal-zxh
+```
+
+#### 使用 Docker Hub 镜像
+
+```bash
+# 直接拉取并运行最新镜像
+docker run -d \
+  -p 8080:8080 \
+  -e DBHOST=your_db_host \
+  -e DBPORT=3306 \
+  -e DBUSER=your_db_user \
+  -e DBPASS=your_db_pass \
+  -e DBNAME=signal_blog \
+  -e REDIS_ADDR=your_redis_host:6379 \
+  -e JWT_SECRET=your_jwt_secret \
+  -e ADMIN_USERNAME=admin \
+  -e ADMIN_PASSWORD=your_admin_password \
+  --name signal-zxh \
+  signalzxh/signal-blog:latest
 ```
 
 ## 项目结构
@@ -103,7 +127,7 @@ signal-zxh/
 │   ├── post.go      # Post 结构定义
 │   └── response.go  # 统一响应格式
 ├── router/          # 路由配置
-│   ├── router.go    # 路由注册入口
+│   ├── router.go    # 路由注册入口（含健康检查）
 │   ├── api.go       # 公开 API 路由
 │   ├── auth.go      # 需认证 API 路由
 │   └── page.go      # 静态页面路由
@@ -128,7 +152,8 @@ signal-zxh/
 │   └── api.sh       # API 测试脚本
 ├── .github/workflows/  # GitHub Actions
 │   ├── ci.yml       # CI 工作流（测试、构建、代码质量）
-│   └── docker.yml   # Docker 镜像构建工作流
+│   └── docker.yml   # Docker 镜像构建工作流（自动构建）
+├── .golangci.yml    # golangci-lint 配置
 ├── main.go          # 应用入口
 ├── Makefile         # 构建脚本
 ├── Dockerfile       # 多阶段构建配置
@@ -250,13 +275,42 @@ w := httptest.NewRecorder()
 r.ServeHTTP(w, req)
 ```
 
-### CI/CD 集成
+## CI/CD 集成
 
-GitHub Actions 自动执行：
+### CI 工作流
+
+GitHub Actions 自动执行（每次 push/PR）：
 - ✅ 多版本 Go 测试（1.23、1.24）
 - ✅ MySQL + Redis 服务集成测试
-- ✅ 代码质量检查（gofmt、go vet）
-- ✅ 测试覆盖率报告生成
+- ✅ 代码质量检查（gofmt、go vet、golangci-lint）
+- ✅ 测试覆盖率报告生成（上传至 Codecov）
+
+### Docker 自动构建
+
+每次 push 到 `main` 分支或创建 `v*` 标签时：
+- ✅ 自动构建 Docker 镜像
+- ✅ 推送到 Docker Hub（`signalzxh/signal-blog`）
+- ✅ 自动打标签：`latest`、`main`、`v1.0.0`
+
+### 代码质量检查
+
+使用 golangci-lint 进行静态分析：
+
+```bash
+# 安装
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+# 运行检查
+golangci-lint run
+```
+
+启用的 linters：
+- `errcheck`: 检查未处理的错误
+- `gofmt`: 代码格式化检查
+- `goimports`: 导入语句排序
+- `govet`: Go 官方静态分析
+- `staticcheck`: 静态检查
+- `unused`: 未使用的代码检查
 
 ## API 文档
 
@@ -277,6 +331,19 @@ GitHub Actions 自动执行：
   "code": 1,
   "message": "error message",
   "data": null
+}
+```
+
+### 健康检查
+
+```http
+GET /health
+```
+
+**响应：**
+```json
+{
+  "status": "ok"
 }
 ```
 
