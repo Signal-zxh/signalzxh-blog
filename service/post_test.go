@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -467,8 +468,8 @@ func TestCreatePost_Validation(t *testing.T) {
 	}{
 		{"valid_title", "Test Title", "Test Content", 1, false},
 		{"empty_title", "", "Test Content", 1, true},
-		{"title_exactly_100_chars", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "content", 1, false},
-		{"title_101_chars", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "content", 1, true},
+		{"title_exactly_255_chars", strings.Repeat("a", 255), "content", 1, false},
+		{"title_256_chars", strings.Repeat("a", 256), "content", 1, true},
 	}
 
 	for _, tt := range tests {

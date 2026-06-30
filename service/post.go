@@ -104,7 +104,7 @@ func (s *postService) GetPostsByPage(page, pageSize int) ([]model.Post, int, err
 }
 
 func (s *postService) CreatePost(title, content string, userID int) (int64, error) {
-	if title == "" || len(title) > 100 {
+	if title == "" || len(title) > 255 {
 		return 0, ErrInvalidInput
 	}
 
@@ -124,7 +124,7 @@ func (s *postService) CreatePost(title, content string, userID int) (int64, erro
 }
 
 func (s *postService) UpdatePost(id int, title, content string) error {
-	if title == "" || len(title) > 100 {
+	if title == "" || len(title) > 255 {
 		return ErrInvalidInput
 	}
 
