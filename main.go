@@ -48,5 +48,7 @@ func main() {
 		log.Println(http.ListenAndServe(":6060", nil))
 	}()
 
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }

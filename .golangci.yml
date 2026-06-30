@@ -15,19 +15,10 @@ linters:
 linters-settings:
   errcheck:
     check-type-assertions: true
-    check-blank: false
+    check-blank: true
 
 issues:
   exclude-rules:
     - path: _test\.go
-      linters:
-        - errcheck
-    - path: main\.go
-      linters:
-        - errcheck
-    - path: service/cache/post\.go
-      linters:
-        - errcheck
-    - path: service/post\.go
       linters:
         - errcheck

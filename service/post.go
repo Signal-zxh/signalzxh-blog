@@ -44,13 +44,13 @@ func (s *postService) GetPostByID(id int) (model.Post, error) {
 	post, err = s.repo.GetPostByID(id)
 	if err != nil {
 		if errors.Is(err, db.ErrNotFound) {
-			_ = s.cache.SetNilPost(id, 1*time.Minute)
+			_ = s.cache.SetNilPost(id, 1*time.Minute) //nolint:errcheck
 			return model.Post{}, ErrNotFound
 		}
 		return model.Post{}, err
 	}
 
-	_ = s.cache.SetPost(post, 10*time.Minute)
+	_ = s.cache.SetPost(post, 10*time.Minute) //nolint:errcheck
 	return post, nil
 }
 
@@ -65,7 +65,7 @@ func (s *postService) GetPosts() ([]model.Post, error) {
 		return nil, err
 	}
 
-	_ = s.cache.SetPosts(posts, 10*time.Minute)
+	_ = s.cache.SetPosts(posts, 10*time.Minute) //nolint:errcheck
 	return posts, nil
 }
 
@@ -99,7 +99,7 @@ func (s *postService) GetPostsByPage(page, pageSize int) ([]model.Post, int, err
 		return nil, 0, err
 	}
 
-	_ = s.cache.SetPostsByPage(posts, page, pageSize, 10*time.Minute)
+	_ = s.cache.SetPostsByPage(posts, page, pageSize, 10*time.Minute) //nolint:errcheck
 	return posts, count, nil
 }
 
@@ -119,7 +119,7 @@ func (s *postService) CreatePost(title, content string, userID int) (int64, erro
 		return 0, err
 	}
 
-	_ = s.cache.InvalidatePosts()
+	_ = s.cache.InvalidatePosts() //nolint:errcheck
 	return id, nil
 }
 
@@ -142,7 +142,7 @@ func (s *postService) UpdatePost(id int, title, content string) error {
 		return err
 	}
 
-	_ = s.cache.InvalidatePost(id)
+	_ = s.cache.InvalidatePost(id) //nolint:errcheck
 	return nil
 }
 
@@ -155,7 +155,7 @@ func (s *postService) DeletePost(id int) error {
 		return err
 	}
 
-	_ = s.cache.InvalidatePost(id)
-	_ = s.cache.InvalidatePosts()
+	_ = s.cache.InvalidatePost(id) //nolint:errcheck
+	_ = s.cache.InvalidatePosts()  //nolint:errcheck
 	return nil
 }

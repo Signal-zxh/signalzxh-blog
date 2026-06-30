@@ -111,18 +111,18 @@ func (c *postCache) SetPostsByPage(posts []model.Post, page, pageSize int, ttl t
 func (c *postCache) InvalidatePost(id int) error {
 	ctx := context.Background()
 	db.RDB.Del(ctx, fmt.Sprintf("post:%d", id))
-	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
+	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result() //nolint:errcheck
 	if len(keys) > 0 {
-		_ = db.RDB.Del(ctx, keys...).Err()
+		_ = db.RDB.Del(ctx, keys...).Err() //nolint:errcheck
 	}
 	return nil
 }
 
 func (c *postCache) InvalidatePosts() error {
 	ctx := context.Background()
-	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
+	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result() //nolint:errcheck
 	if len(keys) > 0 {
-		_ = db.RDB.Del(ctx, keys...).Err()
+		_ = db.RDB.Del(ctx, keys...).Err() //nolint:errcheck
 	}
 	return nil
 }
