@@ -113,7 +113,7 @@ func (c *postCache) InvalidatePost(id int) error {
 	db.RDB.Del(ctx, fmt.Sprintf("post:%d", id))
 	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
 	if len(keys) > 0 {
-		db.RDB.Del(ctx, keys...)
+		_ = db.RDB.Del(ctx, keys...).Err()
 	}
 	return nil
 }
@@ -122,7 +122,7 @@ func (c *postCache) InvalidatePosts() error {
 	ctx := context.Background()
 	keys, _ := db.RDB.Keys(ctx, "posts:list:*").Result()
 	if len(keys) > 0 {
-		db.RDB.Del(ctx, keys...)
+		_ = db.RDB.Del(ctx, keys...).Err()
 	}
 	return nil
 }

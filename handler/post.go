@@ -69,7 +69,11 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 		return
 	}
 
-	uid := userID.(int)
+	uid, ok := userID.(int)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, model.Fail("invalid user_id"))
+		return
+	}
 
 	id, err := h.postService.CreatePost(req.Title, req.Content, uid)
 	if err != nil {
@@ -229,7 +233,10 @@ func (t *ToolHandler) Agent(c *gin.Context) {
 		Query string `json:"query"`
 	}
 
-	c.BindJSON(&req)
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, model.Fail("invalid request"))
+		return
+	}
 
 	result := agent.RouteTool(req.Query)
 
