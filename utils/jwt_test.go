@@ -64,7 +64,7 @@ func TestParseToken_Success(t *testing.T) {
 	}
 
 	if claims == nil {
-		t.Error("ParseToken() returned nil claims")
+		t.Fatal("ParseToken() returned nil claims")
 	}
 
 	if claims.UserID != userID {

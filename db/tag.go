@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"log"
 
 	"github.com/Signal-zxh/signalzxh-blog/model"
 )
@@ -140,14 +141,18 @@ func (r *tagRepo) AddTagsToPost(postID int, tagIDs []int) error {
 	}
 
 	if err := r.RemoveTagsFromPost(postID); err != nil {
-		tx.Rollback()
+		if rbErr := tx.Rollback(); rbErr != nil && rbErr != sql.ErrTxDone {
+			log.Printf("tx rollback error: %v", rbErr)
+		}
 		return err
 	}
 
 	for _, tagID := range tagIDs {
 		_, err := tx.Exec("INSERT INTO post_tags(post_id, tag_id) VALUES(?, ?)", postID, tagID)
 		if err != nil {
-			tx.Rollback()
+			if rbErr := tx.Rollback(); rbErr != nil && rbErr != sql.ErrTxDone {
+				log.Printf("tx rollback error: %v", rbErr)
+			}
 			return err
 		}
 	}

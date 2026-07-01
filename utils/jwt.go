@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -25,7 +26,7 @@ func ParseToken(tokenStr string) (*Claims, error) {
 
 	claims, ok := token.Claims.(*Claims)
 	if !ok || !token.Valid {
-		return nil, err
+		return nil, errors.New("invalid token")
 	}
 
 	return claims, nil
