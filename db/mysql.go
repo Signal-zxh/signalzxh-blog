@@ -27,5 +27,74 @@ func InitDB() error {
 		return err
 	}
 
-	return DB.Ping()
+	if err := DB.Ping(); err != nil {
+		return err
+	}
+
+	if err := createTables(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createTables() error {
+	tables := []string{
+		`CREATE TABLE IF NOT EXISTS categories (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			name VARCHAR(100) NOT NULL UNIQUE,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+
+		`CREATE TABLE IF NOT EXISTS tags (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			name VARCHAR(100) NOT NULL UNIQUE,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+
+		`CREATE TABLE IF NOT EXISTS post_tags (
+			post_id INT NOT NULL,
+			tag_id INT NOT NULL,
+			PRIMARY KEY (post_id, tag_id),
+			FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+			FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+	}
+
+	for _, sql := range tables {
+		if _, err := DB.Exec(sql); err != nil {
+			return err
+		}
+	}
+
+	if err := addCategoryIDColumn(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func addCategoryIDColumn() error {
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*) 
+		FROM INFORMATION_SCHEMA.COLUMNS 
+		WHERE table_schema = DATABASE() 
+		AND table_name = 'posts' 
+		AND column_name = 'category_id'
+	`).Scan(&count)
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		_, err := DB.Exec("ALTER TABLE posts ADD COLUMN category_id INT DEFAULT NULL")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

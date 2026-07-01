@@ -64,6 +64,48 @@ func (m *mockPostService) DeletePost(id int) error {
 	return nil
 }
 
+func (m *mockPostService) GetPostWithCategoryTag(id int) (model.PostWithCategoryTag, error) {
+	if id == 1 {
+		return model.PostWithCategoryTag{ID: 1, Title: "Test Post", Content: "Content", UserID: 1, Category: "Tech", Tags: []string{"Go", "API"}}, nil
+	}
+	if id == 999 {
+		return model.PostWithCategoryTag{}, service.ErrNotFound
+	}
+	return model.PostWithCategoryTag{}, nil
+}
+
+func (m *mockPostService) GetPostsWithCategoryTagByPage(page, pageSize int) ([]model.PostWithCategoryTag, int, error) {
+	return []model.PostWithCategoryTag{
+		{ID: 1, Title: "Test Post", Content: "Content", Category: "Tech", Tags: []string{"Go"}},
+	}, 10, nil
+}
+
+func (m *mockPostService) GetPostsByCategory(categoryID, page, pageSize int) ([]model.Post, int, error) {
+	if categoryID <= 0 {
+		return nil, 0, service.ErrInvalidInput
+	}
+	return []model.Post{
+		{ID: 1, Title: "Test Post", Content: "Content", CategoryID: categoryID},
+	}, 5, nil
+}
+
+func (m *mockPostService) CreatePostWithCategoryTag(title, content string, userID, categoryID int, tagNames []string) (int64, error) {
+	if title == "" {
+		return 0, service.ErrInvalidInput
+	}
+	return 1, nil
+}
+
+func (m *mockPostService) UpdatePostWithCategoryTag(id, categoryID int, title, content string, tagNames []string) error {
+	if id == 999 {
+		return service.ErrNotFound
+	}
+	if title == "" {
+		return service.ErrInvalidInput
+	}
+	return nil
+}
+
 type mockPostServiceError struct{}
 
 func (m *mockPostServiceError) GetPostByID(id int) (model.Post, error) {
@@ -87,6 +129,26 @@ func (m *mockPostServiceError) UpdatePost(id int, title, content string) error {
 }
 
 func (m *mockPostServiceError) DeletePost(id int) error {
+	return errors.New("db error")
+}
+
+func (m *mockPostServiceError) GetPostWithCategoryTag(id int) (model.PostWithCategoryTag, error) {
+	return model.PostWithCategoryTag{}, errors.New("db error")
+}
+
+func (m *mockPostServiceError) GetPostsWithCategoryTagByPage(page, pageSize int) ([]model.PostWithCategoryTag, int, error) {
+	return nil, 0, errors.New("db error")
+}
+
+func (m *mockPostServiceError) GetPostsByCategory(categoryID, page, pageSize int) ([]model.Post, int, error) {
+	return nil, 0, errors.New("db error")
+}
+
+func (m *mockPostServiceError) CreatePostWithCategoryTag(title, content string, userID, categoryID int, tagNames []string) (int64, error) {
+	return 0, errors.New("db error")
+}
+
+func (m *mockPostServiceError) UpdatePostWithCategoryTag(id, categoryID int, title, content string, tagNames []string) error {
 	return errors.New("db error")
 }
 

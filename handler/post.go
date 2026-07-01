@@ -234,6 +234,231 @@ func (h *PostHandler) GetPostByID(c *gin.Context) {
 	c.JSON(http.StatusOK, model.Success(post))
 }
 
+// @Summary 获取文章列表（带分类和标签）
+// @Description 分页获取文章列表，包含分类和标签信息
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(10)
+// @Success 200 {object} model.Response{data=model.PageResponse{data=[]model.PostWithCategoryTag}}
+// @Failure 500 {object} model.Response
+// @Router /posts/detail [get]
+func (h *PostHandler) GetPostsWithCategoryTag(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("page_size", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	posts, total, err := h.postService.GetPostsWithCategoryTagByPage(page, pageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, model.Fail("internal error"))
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Success(model.PageResponse{
+		Data:     posts,
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}))
+}
+
+// @Summary 获取文章详情（带分类和标签）
+// @Description 根据ID获取单篇文章，包含分类和标签信息
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param id path int true "文章ID"
+// @Success 200 {object} model.Response{data=model.PostWithCategoryTag}
+// @Failure 400 {object} model.Response
+// @Failure 404 {object} model.Response
+// @Failure 500 {object} model.Response
+// @Router /posts/{id}/detail [get]
+func (h *PostHandler) GetPostWithCategoryTag(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, model.Fail("invalid id"))
+		return
+	}
+
+	post, err := h.postService.GetPostWithCategoryTag(id)
+	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			c.JSON(http.StatusNotFound, model.Fail("post not found"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Success(post))
+}
+
+// @Summary 获取分类下的文章
+// @Description 分页获取指定分类下的文章
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Param category_id path int true "分类ID"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(10)
+// @Success 200 {object} model.Response{data=model.PageResponse{data=[]model.Post}}
+// @Failure 400 {object} model.Response
+// @Failure 500 {object} model.Response
+// @Router /categories/{category_id}/posts [get]
+func (h *PostHandler) GetPostsByCategory(c *gin.Context) {
+	categoryID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, model.Fail("invalid category_id"))
+		return
+	}
+
+	pageStr := c.DefaultQuery("page", "1")
+	pageSizeStr := c.DefaultQuery("page_size", "10")
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	posts, total, err := h.postService.GetPostsByCategory(categoryID, page, pageSize)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, model.Fail("invalid input"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Success(model.PageResponse{
+		Data:     posts,
+		Total:    total,
+		Page:     page,
+		PageSize: pageSize,
+	}))
+}
+
+// @Summary 创建文章（带分类和标签）
+// @Description 创建新文章，支持指定分类和标签（需要认证）
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body object{title=string,content=string,category_id=int,tags=[]string} true "文章内容"
+// @Success 200 {object} model.Response{data=object{id=int,title=string}}
+// @Failure 400 {object} model.Response
+// @Failure 401 {object} model.Response
+// @Failure 500 {object} model.Response
+// @Router /posts/with-tag [post]
+func (h *PostHandler) CreatePostWithCategoryTag(c *gin.Context) {
+	var req struct {
+		Title      string   `json:"title"`
+		Content    string   `json:"content"`
+		CategoryID int      `json:"category_id"`
+		Tags       []string `json:"tags"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, model.Fail(err.Error()))
+		return
+	}
+
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, model.Fail("no user"))
+		return
+	}
+
+	uid, ok := userID.(int)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, model.Fail("invalid user_id"))
+		return
+	}
+
+	id, err := h.postService.CreatePostWithCategoryTag(req.Title, req.Content, uid, req.CategoryID, req.Tags)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, model.Fail("invalid input"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Success(gin.H{
+		"id":    id,
+		"title": req.Title,
+	}))
+}
+
+// @Summary 更新文章（带分类和标签）
+// @Description 更新指定文章，支持更新分类和标签（需要认证）
+// @Tags posts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path int true "文章ID"
+// @Param request body object{title=string,content=string,category_id=int,tags=[]string} true "更新内容"
+// @Success 200 {object} model.Response{data=object{message=string,id=int}}
+// @Failure 400 {object} model.Response
+// @Failure 401 {object} model.Response
+// @Failure 404 {object} model.Response
+// @Failure 500 {object} model.Response
+// @Router /posts/{id}/with-tag [put]
+func (h *PostHandler) UpdatePostWithCategoryTag(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, model.Fail("invalid id"))
+		return
+	}
+
+	var req struct {
+		Title      string   `json:"title"`
+		Content    string   `json:"content"`
+		CategoryID int      `json:"category_id"`
+		Tags       []string `json:"tags"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, model.Fail(err.Error()))
+		return
+	}
+
+	err = h.postService.UpdatePostWithCategoryTag(id, req.CategoryID, req.Title, req.Content, req.Tags)
+	if err != nil {
+		if errors.Is(err, service.ErrNotFound) {
+			c.JSON(http.StatusNotFound, model.Fail("post not found"))
+		} else if errors.Is(err, service.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, model.Fail("invalid input"))
+		} else {
+			c.JSON(http.StatusInternalServerError, model.Fail(err.Error()))
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, model.Success(gin.H{
+		"message": "updated successfully",
+		"id":      id,
+	}))
+}
+
 // @Summary 用户登录
 // @Description 使用用户名密码登录获取JWT token
 // @Tags auth

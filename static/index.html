@@ -202,13 +202,12 @@
         
         <div id="posts" style="width:100%;"></div>
 
-        <div id="pagination" class="pagination"></div>
-        <div id="pagination-info" class="pagination-info"></div>
+    <div id="pagination" class="pagination"></div>
+    <div id="pagination-info" class="pagination-info"></div>
 
-        <button onclick="loadPosts()" style="margin-top:20px;padding:10px 20px;border:1px solid #23272b;background:#111;color:#fff;border-radius:8px;cursor:pointer;transition:all 0.2s;">
-            刷新文章
-        </button>
-    </div>
+    <button onclick="loadPosts()" style="margin-top:20px;padding:10px 20px;border:1px solid #23272b;background:#111;color:#fff;border-radius:8px;cursor:pointer;transition:all 0.2s;">
+        刷新文章
+    </button>
 </div>
 
 <!-- 登录模态框 -->
@@ -302,7 +301,7 @@ async function loadPosts(page = 1) {
     const container = document.getElementById("posts")
 
     try {
-        const res = await fetch(`/posts?page=${page}&page_size=${pageSize}`, { cache: "no-cache" })
+        const res = await fetch(`/posts/detail?page=${page}&page_size=${pageSize}`, { cache: "no-cache" })
 
         const text = await res.text()
         let json
@@ -334,10 +333,16 @@ async function loadPosts(page = 1) {
             const excerpt = post.content.length > 150
                 ? post.content.substring(0, 150) + '...'
                 : post.content;
+            
+            const categoryHtml = post.category ? `<span style="background:#3b82f6; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-right:8px;">${post.category}</span>` : ''
+            const tagsHtml = post.tags && post.tags.length > 0 
+                ? post.tags.map(tag => `<span style="background:#6b7280; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-right:4px;">${tag}</span>`).join('')
+                : ''
 
             return `
-                <div class="post-card" onclick="viewPost(${post.id})">
+                <div class="post-card" onclick="window.location.href='/post-detail.html?id=${post.id}'">
                     <h2>${post.title}</h2>
+                    <div style="margin-bottom:8px;">${categoryHtml}${tagsHtml}</div>
                     <div class="post-excerpt">${excerpt}</div>
                     <div class="post-meta">点击查看全文</div>
                 </div>
@@ -393,10 +398,6 @@ function renderPagination(total, current, size) {
 
     paginationDiv.innerHTML = html
     infoDiv.innerHTML = `共 ${total} 篇文章，当前第 ${current} 页 / 共 ${totalPages} 页`
-}
-
-function viewPost(id) {
-    window.location.href = '/post-detail.html?id=' + id;
 }
 
 document.addEventListener("DOMContentLoaded", loadPosts)

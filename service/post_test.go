@@ -67,6 +67,22 @@ func (s *spyPostRepo) GetPostByID(id int) (model.Post, error) {
 	return s.getPostByIDReturn, s.getPostByIDErr
 }
 
+func (s *spyPostRepo) GetPostsByCategory(categoryID int, page, pageSize int) ([]model.Post, error) {
+	return []model.Post{}, nil
+}
+
+func (s *spyPostRepo) GetPostsByCategoryCount(categoryID int) (int, error) {
+	return 0, nil
+}
+
+func (s *spyPostRepo) GetPostsWithCategoryTag(id int) (model.PostWithCategoryTag, error) {
+	return model.PostWithCategoryTag{}, nil
+}
+
+func (s *spyPostRepo) GetPostsWithCategoryTagByPage(page, pageSize int) ([]model.PostWithCategoryTag, error) {
+	return []model.PostWithCategoryTag{}, nil
+}
+
 type spyPostCache struct {
 	getPostByIDCalled     bool
 	getPostByIDReturn     model.Post

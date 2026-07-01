@@ -297,6 +297,10 @@
         <div class="form-group">
             <input id="postTitle" placeholder="文章标题" />
             <textarea id="postContent" placeholder="文章内容"></textarea>
+            <select id="postCategory" style="padding:12px; border:1px solid #23272b; border-radius:8px; background:#111; color:#fff; font-size:16px;">
+                <option value="">选择分类</option>
+            </select>
+            <input id="postTags" placeholder="标签（用逗号分隔）" />
             <button onclick="createPost()">发布文章</button>
             <div id="createResult" class="form-result"></div>
         </div>
@@ -324,12 +328,32 @@ function logout() {
     window.location.href = '/'
 }
 
+async function loadCategories() {
+    try {
+        const res = await fetch('/categories', { cache: 'no-cache' })
+        const text = await res.text()
+        const json = JSON.parse(text)
+        
+        if (json.code === 0) {
+            const select = document.getElementById('postCategory')
+            select.innerHTML = '<option value="">选择分类</option>'
+            json.data.forEach(cat => {
+                select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`
+            })
+        }
+    } catch (e) {
+        console.error('加载分类失败', e)
+    }
+}
+
 async function createPost() {
     const token = checkLogin()
     if (!token) return
 
     const title = document.getElementById('postTitle').value
     const content = document.getElementById('postContent').value
+    const categoryId = document.getElementById('postCategory').value
+    const tagsInput = document.getElementById('postTags').value
     const resultDiv = document.getElementById('createResult')
 
     if (!title.trim()) {
@@ -341,14 +365,21 @@ async function createPost() {
         return
     }
 
+    const tags = tagsInput.split(',').map(t => t.trim()).filter(t => t)
+
     try {
-        const res = await fetch('/posts', {
+        const res = await fetch('/api/posts/with-tag', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ title: title.trim(), content: content.trim() })
+            body: JSON.stringify({ 
+                title: title.trim(), 
+                content: content.trim(),
+                category_id: categoryId ? parseInt(categoryId) : null,
+                tags: tags
+            })
         })
 
         const text = await res.text()
@@ -364,6 +395,8 @@ async function createPost() {
             resultDiv.innerHTML = '✅ 发布成功！'
             document.getElementById('postTitle').value = ''
             document.getElementById('postContent').value = ''
+            document.getElementById('postCategory').value = ''
+            document.getElementById('postTags').value = ''
             loadPosts()
         } else {
             resultDiv.innerHTML = '❌ ' + json.message
@@ -381,7 +414,7 @@ async function loadPosts() {
     const container = document.getElementById('postsList')
 
     try {
-        const res = await fetch('/posts', {
+        const res = await fetch('/posts/detail', {
             headers: { 'Authorization': 'Bearer ' + token },
             cache: 'no-cache'
         })
@@ -410,19 +443,24 @@ async function loadPosts() {
         }
 
         window.postsData = posts
-        container.innerHTML = posts.map(post => `
+        container.innerHTML = posts.map(post => {
+            const categoryHtml = post.category ? `<span style="background:#3b82f6; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:8px;">${post.category}</span>` : ''
+            const tagsHtml = post.tags && post.tags.length > 0 
+                ? post.tags.map(tag => `<span style="background:#6b7280; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.75rem; margin-right:4px;">${tag}</span>`).join('')
+                : ''
+            return `
             <div class="post-item" id="post-${post.id}">
                 <div class="post-info">
                     <h3>${escapeHtml(post.title)}</h3>
                     <p>${escapeHtml(post.content)}</p>
-                    <div class="post-meta">ID: ${post.id}</div>
+                    <div class="post-meta">${categoryHtml}${tagsHtml}</div>
                 </div>
                 <div class="post-actions">
                     <button onclick="editPost(${post.id})" class="btn-edit">编辑</button>
                     <button onclick="deletePost(${post.id})" class="btn-delete">删除</button>
                 </div>
             </div>
-        `).join('')
+        `}).join('')
     } catch (e) {
         console.error(e)
         container.innerHTML = '<p style="color:#9aa4b2; text-align:center;">❌ 请求失败</p>'
@@ -537,6 +575,7 @@ function cancelEdit(id) {
 
 document.addEventListener('DOMContentLoaded', function() {
     checkLogin()
+    loadCategories()
     loadPosts()
 })
 </script>
