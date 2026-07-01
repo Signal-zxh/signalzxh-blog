@@ -160,6 +160,33 @@
             font-size: 1.05rem;
             margin-bottom: 30px;
         }
+        .category-filter {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+            width: 100%;
+        }
+        .category-tab {
+            padding: 8px 16px;
+            border: 1px solid #23272b;
+            background: #1a1a1a;
+            color: #9aa4b2;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        .category-tab:hover {
+            border-color: #3b82f6;
+            color: #fff;
+        }
+        .category-tab.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: #fff;
+        }
 
         /* 移动端响应式 */
         @media (max-width: 768px) {
@@ -199,13 +226,15 @@
     <div style="display:flex; justify-content:center; align-items:flex-start; min-height: calc(100vh - 120px); flex-direction:column;">
         <h1 class="hero-title">这是我的个人网站</h1>
         <p class="hero-subtitle">正在建设中...</p>
+
+        <div id="category-filter" class="category-filter"></div>
         
         <div id="posts" style="width:100%;"></div>
 
     <div id="pagination" class="pagination"></div>
     <div id="pagination-info" class="pagination-info"></div>
 
-    <button onclick="loadPosts()" style="margin-top:20px;padding:10px 20px;border:1px solid #23272b;background:#111;color:#fff;border-radius:8px;cursor:pointer;transition:all 0.2s;">
+    <button onclick="loadPosts(currentPage)" style="margin-top:20px;padding:10px 20px;border:1px solid #23272b;background:#111;color:#fff;border-radius:8px;cursor:pointer;transition:all 0.2s;">
         刷新文章
     </button>
 </div>
@@ -295,13 +324,89 @@ async function login() {
 
 let currentPage = 1
 const pageSize = 10
+let currentCategoryId = null
+let categories = []
+
+function getCategoryName(id) {
+    const cat = categories.find(c => c.id === id)
+    return cat ? cat.name : ""
+}
+
+function renderPostCard(post) {
+    const excerpt = post.content.length > 150
+        ? post.content.substring(0, 150) + "..."
+        : post.content
+
+    const categoryName = post.category || (currentCategoryId ? getCategoryName(currentCategoryId) : "")
+    const categoryHtml = categoryName
+        ? `<span style="background:#3b82f6; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-right:8px;">${categoryName}</span>`
+        : ""
+    const tagsHtml = post.tags && post.tags.length > 0
+        ? post.tags.map(tag => `<span style="background:#6b7280; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-right:4px;">${tag}</span>`).join("")
+        : ""
+
+    return `
+        <div class="post-card" onclick="window.location.href='/post-detail.html?id=${post.id}'">
+            <h2>${post.title}</h2>
+            <div style="margin-bottom:8px;">${categoryHtml}${tagsHtml}</div>
+            <div class="post-excerpt">${excerpt}</div>
+            <div class="post-meta">点击查看全文</div>
+        </div>
+    `
+}
+
+async function loadCategories() {
+    const filterEl = document.getElementById("category-filter")
+
+    try {
+        const res = await fetch("/categories", { cache: "no-cache" })
+        const json = await res.json()
+
+        if (json.code !== 0) {
+            filterEl.innerHTML = ""
+            return
+        }
+
+        categories = json.data || []
+        renderCategoryFilter()
+    } catch (e) {
+        console.error(e)
+        filterEl.innerHTML = ""
+    }
+}
+
+function renderCategoryFilter() {
+    const filterEl = document.getElementById("category-filter")
+    let html = `<button type="button" class="category-tab active" data-id="" onclick="selectCategory(null)">全部</button>`
+
+    categories.forEach(cat => {
+        html += `<button type="button" class="category-tab" data-id="${cat.id}" onclick="selectCategory(${cat.id})">${cat.name}</button>`
+    })
+
+    filterEl.innerHTML = html
+}
+
+function selectCategory(categoryId) {
+    currentCategoryId = categoryId
+    currentPage = 1
+
+    document.querySelectorAll(".category-tab").forEach(btn => {
+        const btnId = btn.dataset.id === "" ? null : parseInt(btn.dataset.id, 10)
+        btn.classList.toggle("active", btnId === categoryId)
+    })
+
+    loadPosts(1)
+}
 
 async function loadPosts(page = 1) {
     currentPage = page
     const container = document.getElementById("posts")
 
     try {
-        const res = await fetch(`/posts/detail?page=${page}&page_size=${pageSize}`, { cache: "no-cache" })
+        const url = currentCategoryId
+            ? `/categories/${currentCategoryId}/posts?page=${page}&page_size=${pageSize}`
+            : `/posts/detail?page=${page}&page_size=${pageSize}`
+        const res = await fetch(url, { cache: "no-cache" })
 
         const text = await res.text()
         let json
@@ -329,25 +434,7 @@ async function loadPosts(page = 1) {
             return
         }
 
-        container.innerHTML = posts.map(post => {
-            const excerpt = post.content.length > 150
-                ? post.content.substring(0, 150) + '...'
-                : post.content;
-            
-            const categoryHtml = post.category ? `<span style="background:#3b82f6; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-right:8px;">${post.category}</span>` : ''
-            const tagsHtml = post.tags && post.tags.length > 0 
-                ? post.tags.map(tag => `<span style="background:#6b7280; color:#fff; padding:2px 8px; border-radius:4px; font-size:0.75rem; margin-right:4px;">${tag}</span>`).join('')
-                : ''
-
-            return `
-                <div class="post-card" onclick="window.location.href='/post-detail.html?id=${post.id}'">
-                    <h2>${post.title}</h2>
-                    <div style="margin-bottom:8px;">${categoryHtml}${tagsHtml}</div>
-                    <div class="post-excerpt">${excerpt}</div>
-                    <div class="post-meta">点击查看全文</div>
-                </div>
-            `;
-        }).join("")
+        container.innerHTML = posts.map(renderPostCard).join("")
 
         renderPagination(total, current, size)
     } catch (e) {
@@ -400,7 +487,10 @@ function renderPagination(total, current, size) {
     infoDiv.innerHTML = `共 ${total} 篇文章，当前第 ${current} 页 / 共 ${totalPages} 页`
 }
 
-document.addEventListener("DOMContentLoaded", loadPosts)
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadCategories()
+    loadPosts()
+})
 </script>          
 </body>
 </html>
