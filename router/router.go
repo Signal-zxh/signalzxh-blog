@@ -2,9 +2,9 @@ package router
 
 import (
 	"github.com/Signal-zxh/signalzxh-blog/db"
+	_ "github.com/Signal-zxh/signalzxh-blog/docs" // swagger docs
 	"github.com/Signal-zxh/signalzxh-blog/handler"
 	"github.com/Signal-zxh/signalzxh-blog/middleware"
-	_ "github.com/Signal-zxh/signalzxh-blog/docs"  // swagger docs
 	"github.com/Signal-zxh/signalzxh-blog/service"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
