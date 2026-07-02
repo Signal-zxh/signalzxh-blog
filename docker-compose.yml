@@ -16,11 +16,11 @@ services:
       redis:
         condition: service_healthy
     environment:
-      DBHOST: ${DB_HOST}
-      DBPORT: ${DB_PORT}
-      DBUSER: ${DB_USER}
-      DBPASS: ${DB_PASS}
-      DBNAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
       REDIS_ADDR: ${REDIS_ADDR}
       REDIS_DB: ${REDIS_DB}
     mem_limit: 200m

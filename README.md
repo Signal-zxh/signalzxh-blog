@@ -78,7 +78,7 @@ go run main.go
 1. 配置环境变量
 ```bash
 # 创建 .env 文件
-echo "DBPASS=your_password" > .env
+echo "DB_PASS=your_password" > .env
 echo "MYSQL_ROOT_PASSWORD=your_root_password" >> .env
 ```
 
@@ -98,11 +98,11 @@ docker-compose logs -f signal-zxh
 # 直接拉取并运行最新镜像
 docker run -d \
   -p 8080:8080 \
-  -e DBHOST=your_db_host \
-  -e DBPORT=3306 \
-  -e DBUSER=your_db_user \
-  -e DBPASS=your_db_pass \
-  -e DBNAME=signal_blog \
+  -e DB_HOST=your_db_host \
+  -e DB_PORT=3306 \
+  -e DB_USER=your_db_user \
+  -e DB_PASS=your_db_pass \
+  -e DB_NAME=signal_blog \
   -e REDIS_ADDR=your_redis_host:6379 \
   -e JWT_SECRET=your_jwt_secret \
   -e ADMIN_USERNAME=admin \
@@ -612,11 +612,11 @@ GET /static/*          # 静态资源
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
-| DBHOST | 数据库主机 | mysql |
-| DBPORT | 数据库端口 | 3306 |
-| DBUSER | 数据库用户 | root |
-| DBPASS | 数据库密码 | - |
-| DBNAME | 数据库名称 | blog |
+| DB_HOST | 数据库主机 | mysql |
+| DB_PORT | 数据库端口 | 3306 |
+| DB_USER | 数据库用户 | root |
+| DB_PASS | 数据库密码 | - |
+| DB_NAME | 数据库名称 | blog |
 | REDIS_ADDR | Redis 地址 | redis:6379 |
 | REDIS_DB | Redis 数据库编号 | 0 |
 | REDIS_PASSWORD | Redis 密码 | (空) |
