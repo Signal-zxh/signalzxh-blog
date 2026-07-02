@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类管理 - Signal ZXH</title>
+    <style>
+        body { font-family: Inter, -apple-system, sans-serif; background:#0b0d0f; color:#ecedee; padding:40px; }
+        .card { background:#111; padding:20px; border-radius:8px; border:1px solid #23272b; max-width:800px; margin: 0 auto; }
+        .row { display:flex; gap:12px; align-items:center; }
+        input { padding:8px 10px; border-radius:6px; border:1px solid #23272b; background:#0f1112; color:#fff; }
+        button { padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
+        .btn-primary { background:#3b82f6; color:#fff }
+        .btn-danger { background:#ef4444; color:#fff }
+        .list { margin-top:16px; }
+        .item { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #23272b; }
+        .item input { background:#111; border:1px solid #3b82f6 }
+        .actions { display:flex; gap:8px }
+        .hint { color:#9aa4b2; margin-top:8px }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>分类管理</h2>
+        <div>
+            <div class="row">
+                <input id="newName" placeholder="新分类名称" />
+                <button class="btn-primary" onclick="createCategory()">创建</button>
+            </div>
+            <div class="hint">注意：编辑/删除操作需要登录（在管理后台登录）。</div>
+        </div>
+
+        <div class="list" id="categoryList"></div>
+    </div>
+
+<script>
+function checkLogin() {
+    const token = localStorage.getItem('token')
+    return token
+}
+
+async function loadCategories() {
+    try {
+        const res = await fetch('/categories', { cache: 'no-cache' })
+        const text = await res.text()
+        const json = JSON.parse(text)
+        if (json.code !== 0) {
+            document.getElementById('categoryList').innerHTML = '<div style="color:#f00">加载失败：'+json.message+'</div>'
+            return
+        }
+        const list = json.data || []
+        const html = list.map(c => `
+            <div class="item" id="cat-${c.id}">
+                <div style="flex:1; display:flex; gap:8px; align-items:center;">
+                    <input id="name-${c.id}" value="${escapeHtml(c.name)}" />
+                    <div style="color:#9aa4b2; font-size:12px">ID: ${c.id}</div>
+                </div>
+                <div class="actions">
+                    <button onclick="updateCategory(${c.id})" class="btn-primary">保存</button>
+                    <button onclick="deleteCategory(${c.id})" class="btn-danger">删除</button>
+                </div>
+            </div>
+        `).join('')
+        document.getElementById('categoryList').innerHTML = html || '<div style="color:#9aa4b2">暂无分类</div>'
+    } catch (e) {
+        console.error(e)
+        document.getElementById('categoryList').innerHTML = '<div style="color:#f00">请求失败</div>'
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div')
+    div.textContent = text
+    return div.innerHTML
+}
+
+async function createCategory() {
+    const name = document.getElementById('newName').value.trim()
+    if (!name) { alert('请输入分类名称'); return }
+    const token = checkLogin()
+    if (!token) { alert('请先登录管理后台'); return }
+
+    try {
+        const res = await fetch('/api/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ name })
+        })
+        const text = await res.text()
+        const json = JSON.parse(text)
+        if (json.code === 0) {
+            document.getElementById('newName').value = ''
+            loadCategories()
+            alert('创建成功')
+        } else {
+            alert('创建失败: ' + json.message)
+        }
+    } catch (e) {
+        console.error(e)
+        alert('请求失败')
+    }
+}
+
+async function updateCategory(id) {
+    const name = document.getElementById('name-' + id).value.trim()
+    if (!name) { alert('请输入名称'); return }
+    const token = checkLogin()
+    if (!token) { alert('请先登录管理后台'); return }
+
+    try {
+        const res = await fetch('/api/categories/' + id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            body: JSON.stringify({ name })
+        })
+        const text = await res.text()
+        const json = JSON.parse(text)
+        if (json.code === 0) {
+            alert('更新成功')
+            loadCategories()
+        } else {
+            alert('更新失败: ' + json.message)
+        }
+    } catch (e) {
+        console.error(e)
+        alert('请求失败')
+    }
+}
+
+async function deleteCategory(id) {
+    if (!confirm('确定删除此分类？')) return
+    const token = checkLogin()
+    if (!token) { alert('请先登录管理后台'); return }
+    try {
+        const res = await fetch('/api/categories/' + id, {
+            method: 'DELETE',
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        const text = await res.text()
+        const json = JSON.parse(text)
+        if (json.code === 0) {
+            alert('删除成功')
+            loadCategories()
+        } else {
+            alert('删除失败: ' + json.message)
+        }
+    } catch (e) {
+        console.error(e)
+        alert('请求失败')
+    }
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    loadCategories()
+})
+</script>
+</body>
+</html>

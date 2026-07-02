@@ -10,6 +10,9 @@ func RegisterPage(r *gin.Engine) {
 	r.GET("/admin", func(c *gin.Context) {
 		c.File("./static/admin.html")
 	})
+	r.GET("/admin/categories", func(c *gin.Context) {
+		c.File("./static/admin-categories.html")
+	})
 	r.GET("/tools", func(c *gin.Context) {
 		c.File("./static/tools.html")
 	})
