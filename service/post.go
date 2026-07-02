@@ -309,8 +309,18 @@ func (s *postService) UpdatePostWithCategoryTag(id, categoryID int, title, conte
 	err := s.repo.UpdatePost(post)
 	if err != nil {
 		if errors.Is(err, db.ErrNoRowsAffected) {
-			return ErrNotFound
+			if _, err := s.repo.GetPostByID(id); err != nil {
+				if errors.Is(err, db.ErrNotFound) {
+					return ErrNotFound
+				}
+				return err
+			}
+		} else {
+			return err
 		}
+	}
+
+	if err := s.tagDB.RemoveTagsFromPost(id); err != nil {
 		return err
 	}
 
@@ -326,8 +336,6 @@ func (s *postService) UpdatePostWithCategoryTag(id, categoryID int, title, conte
 		if err := s.tagDB.AddTagsToPost(id, tagIDs); err != nil {
 			return err
 		}
-	} else {
-		_ = s.tagDB.RemoveTagsFromPost(id) //nolint:errcheck
 	}
 
 	_ = s.cache.InvalidatePost(id) //nolint:errcheck
