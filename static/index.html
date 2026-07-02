@@ -228,6 +228,7 @@
         <p class="hero-subtitle">正在建设中...</p>
 
         <div id="category-filter" class="category-filter"></div>
+        <div id="tag-filter" class="category-filter" style="margin-top:6px;"></div>
         
         <div id="posts" style="width:100%;"></div>
 
@@ -325,7 +326,9 @@ async function login() {
 let currentPage = 1
 const pageSize = 10
 let currentCategoryId = null
+let currentTagName = null
 let categories = []
+let tags = []
 
 function getCategoryName(id) {
     const cat = categories.find(c => c.id === id)
@@ -375,6 +378,49 @@ async function loadCategories() {
     }
 }
 
+async function loadTags() {
+    const filterEl = document.getElementById("tag-filter")
+
+    try {
+        const res = await fetch("/tags", { cache: "no-cache" })
+        const json = await res.json()
+
+        if (json.code !== 0) {
+            filterEl.innerHTML = ""
+            return
+        }
+
+        tags = json.data || []
+        renderTagFilter()
+    } catch (e) {
+        console.error(e)
+        filterEl.innerHTML = ""
+    }
+}
+
+function renderTagFilter() {
+    const filterEl = document.getElementById("tag-filter")
+    let html = `<button type="button" class="category-tab active" data-name="" onclick="selectTag(null)">全部标签</button>`
+
+    tags.forEach(t => {
+        html += `<button type="button" class="category-tab" data-name="${t.name}" onclick="selectTag('${t.name}')">${t.name}</button>`
+    })
+
+    filterEl.innerHTML = html
+}
+
+function selectTag(tagName) {
+    currentTagName = tagName
+    currentPage = 1
+
+    document.querySelectorAll('#tag-filter .category-tab').forEach(btn => {
+        const name = btn.dataset.name === "" ? null : btn.dataset.name
+        btn.classList.toggle('active', name === tagName)
+    })
+
+    loadPosts(1)
+}
+
 function renderCategoryFilter() {
     const filterEl = document.getElementById("category-filter")
     let html = `<button type="button" class="category-tab active" data-id="" onclick="selectCategory(null)">全部</button>`
@@ -403,6 +449,43 @@ async function loadPosts(page = 1) {
     const container = document.getElementById("posts")
 
     try {
+        // If a tag is selected, fetch a larger page and filter client-side, then paginate
+        if (currentTagName) {
+            const res = await fetch(`/posts/detail?page=1&page_size=1000`, { cache: "no-cache" })
+            const text = await res.text()
+            let json
+            try {
+                json = JSON.parse(text)
+            } catch (e) {
+                container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ JSON解析失败</p>"
+                return
+            }
+            if (json.code !== 0) {
+                container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ API错误: " + json.message + "</p>"
+                return
+            }
+
+            const data = json.data || {}
+            let allPosts = data.data || []
+            // filter by tag name
+            const filtered = allPosts.filter(p => p.tags && p.tags.includes(currentTagName))
+            const total = filtered.length
+            const size = pageSize
+            const current = page
+
+            if (total === 0) {
+                container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>暂无文章</p>"
+                renderPagination(0, 1, size)
+                return
+            }
+
+            const start = (page - 1) * size
+            const slice = filtered.slice(start, start + size)
+            container.innerHTML = slice.map(renderPostCard).join("")
+            renderPagination(total, current, size)
+            return
+        }
+
         const url = currentCategoryId
             ? `/categories/${currentCategoryId}/posts?page=${page}&page_size=${pageSize}`
             : `/posts/detail?page=${page}&page_size=${pageSize}`
@@ -489,6 +572,7 @@ function renderPagination(total, current, size) {
 
 document.addEventListener("DOMContentLoaded", async () => {
     await loadCategories()
+    await loadTags()
     loadPosts()
 })
 </script>          
