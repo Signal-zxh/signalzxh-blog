@@ -80,6 +80,15 @@ func (m *mockPostService) GetPostsWithCategoryTagByPage(page, pageSize int) ([]m
 	}, 10, nil
 }
 
+func (m *mockPostService) GetPostsByTag(tagID, page, pageSize int) ([]model.PostWithCategoryTag, int, error) {
+	if tagID <= 0 {
+		return nil, 0, service.ErrInvalidInput
+	}
+	return []model.PostWithCategoryTag{
+		{ID: 1, Title: "Test Post by Tag", Content: "Content", Category: "Tech", Tags: []string{"Go"}},
+	}, 5, nil
+}
+
 func (m *mockPostService) GetPostsByCategory(categoryID, page, pageSize int) ([]model.Post, int, error) {
 	if categoryID <= 0 {
 		return nil, 0, service.ErrInvalidInput
@@ -137,6 +146,10 @@ func (m *mockPostServiceError) GetPostWithCategoryTag(id int) (model.PostWithCat
 }
 
 func (m *mockPostServiceError) GetPostsWithCategoryTagByPage(page, pageSize int) ([]model.PostWithCategoryTag, int, error) {
+	return nil, 0, errors.New("db error")
+}
+
+func (m *mockPostServiceError) GetPostsByTag(tagID, page, pageSize int) ([]model.PostWithCategoryTag, int, error) {
 	return nil, 0, errors.New("db error")
 }
 
@@ -693,6 +706,49 @@ func TestLogin_InvalidCredentials(t *testing.T) {
 
 	if resp["message"] != "invalid credentials" {
 		t.Errorf("Login() got message %v, want 'invalid credentials'", resp["message"])
+	}
+}
+
+func TestGetPostsByTag_Success(t *testing.T) {
+	postHandler := handler.NewPostHandler(&mockPostService{})
+	r := router.SetupRouter(postHandler)
+
+	req := httptest.NewRequest("GET", "/tags/1/posts?page=1&page_size=10", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("GetPostsByTag() got status code %d, want %d", w.Code, http.StatusOK)
+	}
+
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+
+	if resp["code"] != float64(0) {
+		t.Errorf("GetPostsByTag() got code %v, want 0", resp["code"])
+	}
+
+	data := resp["data"].(map[string]interface{})
+	posts, ok := data["data"].([]interface{})
+	if !ok {
+		t.Fatal("GetPostsByTag() data.data is not array")
+	}
+
+	if len(posts) != 1 {
+		t.Errorf("GetPostsByTag() got %d posts, want 1", len(posts))
+	}
+}
+
+func TestGetPostsByTag_InvalidID(t *testing.T) {
+	postHandler := handler.NewPostHandler(&mockPostService{})
+	r := router.SetupRouter(postHandler)
+
+	req := httptest.NewRequest("GET", "/tags/abc/posts", nil)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("GetPostsByTag() got status code %d, want %d", w.Code, http.StatusBadRequest)
 	}
 }
 

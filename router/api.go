@@ -27,6 +27,7 @@ func RegisterAPI(r *gin.Engine, h *handler.PostHandler, ch *handler.CategoryHand
 	r.GET("/categories", ch.GetCategories)
 	r.GET("/categories/:id", ch.GetCategory)
 	r.GET("/categories/:id/posts", h.GetPostsByCategory)
+	r.GET("/tags/:id/posts", h.GetPostsByTag)
 
 	api := r.Group("/api/tools")
 	api.POST("/http", t.HttpProbe)

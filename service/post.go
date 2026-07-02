@@ -24,6 +24,7 @@ type PostService interface {
 	GetPostWithCategoryTag(id int) (model.PostWithCategoryTag, error)
 	GetPostsWithCategoryTagByPage(page, pageSize int) ([]model.PostWithCategoryTag, int, error)
 	GetPostsByCategory(categoryID, page, pageSize int) ([]model.Post, int, error)
+	GetPostsByTag(tagID, page, pageSize int) ([]model.PostWithCategoryTag, int, error)
 	CreatePostWithCategoryTag(title, content string, userID, categoryID int, tagNames []string) (int64, error)
 	UpdatePostWithCategoryTag(id, categoryID int, title, content string, tagNames []string) error
 }
@@ -224,6 +225,33 @@ func (s *postService) GetPostsByCategory(categoryID, page, pageSize int) ([]mode
 	}
 
 	count, err := s.repo.GetPostsByCategoryCount(categoryID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return posts, count, nil
+}
+
+func (s *postService) GetPostsByTag(tagID, page, pageSize int) ([]model.PostWithCategoryTag, int, error) {
+	if tagID <= 0 {
+		return nil, 0, ErrInvalidInput
+	}
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	posts, err := s.repo.GetPostsByTag(tagID, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	count, err := s.repo.GetPostsByTagCount(tagID)
 	if err != nil {
 		return nil, 0, err
 	}

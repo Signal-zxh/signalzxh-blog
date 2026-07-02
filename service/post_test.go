@@ -75,6 +75,14 @@ func (s *spyPostRepo) GetPostsByCategoryCount(categoryID int) (int, error) {
 	return 0, nil
 }
 
+func (s *spyPostRepo) GetPostsByTag(tagID int, page, pageSize int) ([]model.PostWithCategoryTag, error) {
+	return []model.PostWithCategoryTag{}, nil
+}
+
+func (s *spyPostRepo) GetPostsByTagCount(tagID int) (int, error) {
+	return 0, nil
+}
+
 func (s *spyPostRepo) GetPostsWithCategoryTag(id int) (model.PostWithCategoryTag, error) {
 	return model.PostWithCategoryTag{}, nil
 }

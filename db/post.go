@@ -20,6 +20,8 @@ type PostRepo interface {
 	GetPostByID(id int) (model.Post, error)
 	GetPostsByCategory(categoryID int, page, pageSize int) ([]model.Post, error)
 	GetPostsByCategoryCount(categoryID int) (int, error)
+	GetPostsByTag(tagID int, page, pageSize int) ([]model.PostWithCategoryTag, error)
+	GetPostsByTagCount(tagID int) (int, error)
 	GetPostsWithCategoryTag(id int) (model.PostWithCategoryTag, error)
 	GetPostsWithCategoryTagByPage(page, pageSize int) ([]model.PostWithCategoryTag, error)
 }
@@ -183,6 +185,61 @@ func (r *postRepo) GetPostsByCategory(categoryID int, page, pageSize int) ([]mod
 func (r *postRepo) GetPostsByCategoryCount(categoryID int) (int, error) {
 	var count int
 	err := DB.QueryRow("SELECT COUNT(*) FROM posts WHERE category_id = ?", categoryID).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *postRepo) GetPostsByTag(tagID int, page, pageSize int) ([]model.PostWithCategoryTag, error) {
+	offset := (page - 1) * pageSize
+	rows, err := DB.Query(`
+		SELECT p.id, p.title, p.content, p.user_id, COALESCE(c.name, '') as category
+		FROM posts p
+		LEFT JOIN categories c ON p.category_id = c.id
+		JOIN post_tags pt ON p.id = pt.post_id
+		WHERE pt.tag_id = ?
+		ORDER BY p.id DESC LIMIT ? OFFSET ?`,
+		tagID, pageSize, offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []model.PostWithCategoryTag
+	for rows.Next() {
+		var post model.PostWithCategoryTag
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.UserID, &post.Category); err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	for i := range posts {
+		tags, err := TagRepoImpl.GetTagsByPostID(posts[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		posts[i].Tags = make([]string, len(tags))
+		for j, t := range tags {
+			posts[i].Tags[j] = t.Name
+		}
+	}
+
+	return posts, nil
+}
+
+func (r *postRepo) GetPostsByTagCount(tagID int) (int, error) {
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*)
+		FROM posts p
+		JOIN post_tags pt ON p.id = pt.post_id
+		WHERE pt.tag_id = ?`, tagID).Scan(&count)
 	if err != nil {
 		return 0, err
 	}

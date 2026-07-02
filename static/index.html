@@ -326,6 +326,7 @@ async function login() {
 let currentPage = 1
 const pageSize = 10
 let currentCategoryId = null
+let currentTagId = null
 let currentTagName = null
 let categories = []
 let tags = []
@@ -400,22 +401,28 @@ async function loadTags() {
 
 function renderTagFilter() {
     const filterEl = document.getElementById("tag-filter")
-    let html = `<button type="button" class="category-tab active" data-name="" onclick="selectTag(null)">全部标签</button>`
+    let html = `<button type="button" class="category-tab active" data-id="" data-name="" onclick="selectTag(null, null)">全部标签</button>`
 
     tags.forEach(t => {
-        html += `<button type="button" class="category-tab" data-name="${t.name}" onclick="selectTag('${t.name}')">${t.name}</button>`
+        html += `<button type="button" class="category-tab" data-id="${t.id}" data-name="${t.name}" onclick="selectTag(${t.id}, '${t.name}')">${t.name}</button>`
     })
 
     filterEl.innerHTML = html
 }
 
-function selectTag(tagName) {
+function selectTag(tagId, tagName) {
+    currentTagId = tagId
     currentTagName = tagName
+    currentCategoryId = null
     currentPage = 1
 
     document.querySelectorAll('#tag-filter .category-tab').forEach(btn => {
-        const name = btn.dataset.name === "" ? null : btn.dataset.name
-        btn.classList.toggle('active', name === tagName)
+        const id = btn.dataset.id === "" ? null : parseInt(btn.dataset.id, 10)
+        btn.classList.toggle('active', id === tagId)
+    })
+
+    document.querySelectorAll('#category-filter .category-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.id === "")
     })
 
     loadPosts(1)
@@ -434,11 +441,19 @@ function renderCategoryFilter() {
 
 function selectCategory(categoryId) {
     currentCategoryId = categoryId
+    currentTagId = null
+    currentTagName = null
     currentPage = 1
 
     document.querySelectorAll(".category-tab").forEach(btn => {
-        const btnId = btn.dataset.id === "" ? null : parseInt(btn.dataset.id, 10)
-        btn.classList.toggle("active", btnId === categoryId)
+        if (btn.closest('#category-filter')) {
+            const btnId = btn.dataset.id === "" ? null : parseInt(btn.dataset.id, 10)
+            btn.classList.toggle("active", btnId === categoryId)
+        }
+    })
+
+    document.querySelectorAll('#tag-filter .category-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.id === "")
     })
 
     loadPosts(1)
@@ -449,48 +464,13 @@ async function loadPosts(page = 1) {
     const container = document.getElementById("posts")
 
     try {
-        // If a tag is selected, fetch a larger page and filter client-side, then paginate
-        if (currentTagName) {
-            const res = await fetch(`/posts/detail?page=1&page_size=1000`, { cache: "no-cache" })
-            const text = await res.text()
-            let json
-            try {
-                json = JSON.parse(text)
-            } catch (e) {
-                container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ JSON解析失败</p>"
-                return
-            }
-            if (json.code !== 0) {
-                container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ API错误: " + json.message + "</p>"
-                return
-            }
+        const url = currentTagId
+            ? `/tags/${currentTagId}/posts?page=${page}&page_size=${pageSize}`
+            : currentCategoryId
+                ? `/categories/${currentCategoryId}/posts?page=${page}&page_size=${pageSize}`
+                : `/posts/detail?page=${page}&page_size=${pageSize}`
 
-            const data = json.data || {}
-            let allPosts = data.data || []
-            // filter by tag name
-            const filtered = allPosts.filter(p => p.tags && p.tags.includes(currentTagName))
-            const total = filtered.length
-            const size = pageSize
-            const current = page
-
-            if (total === 0) {
-                container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>暂无文章</p>"
-                renderPagination(0, 1, size)
-                return
-            }
-
-            const start = (page - 1) * size
-            const slice = filtered.slice(start, start + size)
-            container.innerHTML = slice.map(renderPostCard).join("")
-            renderPagination(total, current, size)
-            return
-        }
-
-        const url = currentCategoryId
-            ? `/categories/${currentCategoryId}/posts?page=${page}&page_size=${pageSize}`
-            : `/posts/detail?page=${page}&page_size=${pageSize}`
         const res = await fetch(url, { cache: "no-cache" })
-
         const text = await res.text()
         let json
         try {
@@ -499,7 +479,6 @@ async function loadPosts(page = 1) {
             container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ JSON解析失败</p>"
             return
         }
-
         if (json.code !== 0) {
             container.innerHTML = "<p style='color:#9aa4b2; text-align:center; padding:20px 0;'>❌ API错误: " + json.message + "</p>"
             return
@@ -518,7 +497,6 @@ async function loadPosts(page = 1) {
         }
 
         container.innerHTML = posts.map(renderPostCard).join("")
-
         renderPagination(total, current, size)
     } catch (e) {
         console.error(e)
