@@ -74,7 +74,7 @@ func (h *TagHandler) GetTag(c *gin.Context) {
 // @Success 200 {object} model.Response{data=int64}
 // @Failure 400 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /tags [post]
+// @Router /api/tags [post]
 func (h *TagHandler) CreateTag(c *gin.Context) {
 	var req struct {
 		Name string `json:"name"`
@@ -153,7 +153,7 @@ func (h *TagHandler) UpdateTag(c *gin.Context) {
 // @Failure 400 {object} model.Response
 // @Failure 404 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /tags/{id} [delete]
+// @Router /api/tags/{id} [delete]
 func (h *TagHandler) DeleteTag(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

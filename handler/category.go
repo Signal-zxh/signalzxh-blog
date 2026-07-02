@@ -74,7 +74,7 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 // @Success 200 {object} model.Response{data=int64}
 // @Failure 400 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /categories [post]
+// @Router /api/categories [post]
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 	var req struct {
 		Name string `json:"name"`
@@ -109,7 +109,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 // @Failure 400 {object} model.Response
 // @Failure 404 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /categories/{id} [put]
+// @Router /api/categories/{id} [put]
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -153,7 +153,7 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 // @Failure 400 {object} model.Response
 // @Failure 404 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /categories/{id} [delete]
+// @Router /api/categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

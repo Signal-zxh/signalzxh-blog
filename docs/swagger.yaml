@@ -88,6 +88,207 @@ info:
   title: Signalzxh Blog API
   version: "1.0"
 paths:
+  /api/categories:
+    post:
+      consumes:
+      - application/json
+      description: 创建新分类
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 分类名称
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  format: int64
+                  type: integer
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 创建分类
+      tags:
+      - categories
+  /api/categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除分类
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 分类ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 删除分类
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      description: 更新分类信息
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 分类ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 分类名称
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 更新分类
+      tags:
+      - categories
+  /api/tags:
+    post:
+      consumes:
+      - application/json
+      description: 创建新标签
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 标签名称
+        in: body
+        name: name
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  format: int64
+                  type: integer
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 创建标签
+      tags:
+      - tags
+  /api/tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除标签
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 标签ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: 删除标签
+      tags:
+      - tags
   /api/tools/agent:
     post:
       consumes:
@@ -125,6 +326,49 @@ paths:
       summary: AI Agent工具
       tags:
       - tools
+  /api/tools/http:
+    post:
+      consumes:
+      - application/json
+      description: 发送HTTP请求并返回响应状态和时间
+      parameters:
+      - description: 探测URL
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            url:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.Response'
+            - properties:
+                data:
+                  properties:
+                    status:
+                      type: integer
+                    time_ms:
+                      type: integer
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.Response'
+      summary: HTTP探测工具
+      tags:
+      - tools
   /categories:
     get:
       consumes:
@@ -149,45 +393,6 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 获取分类列表
-      tags:
-      - categories
-    post:
-      consumes:
-      - application/json
-      description: 创建新分类
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: 分类名称
-        in: body
-        name: name
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/model.Response'
-            - properties:
-                data:
-                  type: integer
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: 创建分类
       tags:
       - categories
   /categories/{category_id}/posts:
@@ -242,43 +447,6 @@ paths:
       tags:
       - posts
   /categories/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除分类
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: 分类ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/model.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: 删除分类
-      tags:
-      - categories
     get:
       consumes:
       - application/json
@@ -314,49 +482,6 @@ paths:
           schema:
             $ref: '#/definitions/model.Response'
       summary: 获取单个分类
-      tags:
-      - categories
-    put:
-      consumes:
-      - application/json
-      description: 更新分类信息
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: 分类ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: 分类名称
-        in: body
-        name: name
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/model.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: 更新分类
       tags:
       - categories
   /login:
@@ -848,49 +973,6 @@ paths:
       summary: 创建文章（带分类和标签）
       tags:
       - posts
-  /api/tools/http:
-    post:
-      consumes:
-      - application/json
-      description: 发送HTTP请求并返回响应状态和时间
-      parameters:
-      - description: 探测URL
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            url:
-              type: string
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/model.Response'
-            - properties:
-                data:
-                  properties:
-                    status:
-                      type: integer
-                    time_ms:
-                      type: integer
-                  type: object
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: HTTP探测工具
-      tags:
-      - tools
   /tags:
     get:
       consumes:
@@ -917,83 +999,7 @@ paths:
       summary: 获取标签列表
       tags:
       - tags
-    post:
-      consumes:
-      - application/json
-      description: 创建新标签
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: 标签名称
-        in: body
-        name: name
-        required: true
-        schema:
-          type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/model.Response'
-            - properties:
-                data:
-                  type: integer
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: 创建标签
-      tags:
-      - tags
   /tags/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除标签
-      parameters:
-      - description: Bearer token
-        in: header
-        name: Authorization
-        required: true
-        type: string
-      - description: 标签ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/model.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/model.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/model.Response'
-      summary: 删除标签
-      tags:
-      - tags
     get:
       consumes:
       - application/json
