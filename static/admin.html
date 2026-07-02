@@ -338,9 +338,10 @@ async function loadCategories() {
         const json = JSON.parse(text)
         
         if (json.code === 0) {
+            window.categoriesData = json.data || []
             const select = document.getElementById('postCategory')
             select.innerHTML = '<option value="">选择分类</option>'
-            json.data.forEach(cat => {
+            window.categoriesData.forEach(cat => {
                 select.innerHTML += `<option value="${cat.id}">${cat.name}</option>`
             })
         }
@@ -512,11 +513,18 @@ function editPost(id) {
     const post = (window.postsData || []).find(p => p.id === id)
     const title = post ? post.title : ''
     const content = post ? post.content : ''
+    const selectedCategory = (window.categoriesData || []).find(cat => cat.name === (post && post.category))
+    const initialTags = post && post.tags ? post.tags.join(', ') : ''
 
     item.innerHTML = `
         <div class="edit-form" style="width:100%;">
             <input id="edit-title-${id}" value="${escapeHtml(title)}" placeholder="文章标题" />
             <textarea id="edit-content-${id}" placeholder="文章内容">${escapeHtml(content)}</textarea>
+            <select id="edit-category-${id}" style="padding:10px; border:1px solid #3b82f6; border-radius:6px; background:#111; color:#fff; font-size:15px;">
+                <option value="">选择分类</option>
+                ${(window.categoriesData || []).map(cat => `<option value="${cat.id}" ${selectedCategory && selectedCategory.id === cat.id ? 'selected' : ''}>${escapeHtml(cat.name)}</option>`).join('')}
+            </select>
+            <input id="edit-tags-${id}" value="${escapeHtml(initialTags)}" placeholder="标签（用逗号分隔）" />
             <div class="edit-actions">
                 <button onclick="savePost(${id})" class="btn-save">保存</button>
                 <button onclick="cancelEdit(${id})" class="btn-cancel">取消</button>
@@ -531,6 +539,9 @@ async function savePost(id) {
 
     const title = document.getElementById('edit-title-' + id).value.trim()
     const content = document.getElementById('edit-content-' + id).value.trim()
+    const categoryId = document.getElementById('edit-category-' + id).value
+    const tagsInput = document.getElementById('edit-tags-' + id).value
+    const tags = tagsInput.split(',').map(t => t.trim()).filter(Boolean)
 
     if (!title) {
         alert('❌ 请输入标题')
@@ -542,13 +553,18 @@ async function savePost(id) {
     }
 
     try {
-        const res = await fetch('/posts/' + id, {
+        const res = await fetch('/api/posts/' + id + '/with-tag', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + token
             },
-            body: JSON.stringify({ title, content })
+            body: JSON.stringify({
+                title,
+                content,
+                category_id: categoryId ? parseInt(categoryId) : null,
+                tags
+            })
         })
 
         const text = await res.text()
