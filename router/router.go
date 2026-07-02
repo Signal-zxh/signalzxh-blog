@@ -25,7 +25,6 @@ func SetupRouter(postHandler *handler.PostHandler) *gin.Engine {
 	tagHandler := handler.NewTagHandler(tagService)
 
 	RegisterPage(r)
-	RegisterAuth(r, postHandler)
 	RegisterAPI(r, postHandler, categoryHandler, tagHandler)
 
 	return r

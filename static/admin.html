@@ -480,7 +480,7 @@ async function deletePost(id) {
     }
 
     try {
-        const res = await fetch('/posts/' + id, {
+        const res = await fetch('/api/posts/' + id, {
             method: 'DELETE',
             headers: { 'Authorization': 'Bearer ' + token }
         })

@@ -345,7 +345,7 @@ func TestCreatePost_Success(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"New Post","content":"New Content"}`
-	req := httptest.NewRequest("POST", "/posts", strings.NewReader(body))
+	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	// Mock authenticated user
@@ -377,7 +377,7 @@ func TestCreatePost_NoAuth(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"New Post","content":"New Content"}`
-	req := httptest.NewRequest("POST", "/posts", strings.NewReader(body))
+	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -395,7 +395,7 @@ func TestCreatePost_InvalidInput(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"","content":"Content"}`
-	req := httptest.NewRequest("POST", "/posts", strings.NewReader(body))
+	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	token := generateTestToken(1)
@@ -423,7 +423,7 @@ func TestCreatePost_BadJSON(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `invalid json`
-	req := httptest.NewRequest("POST", "/posts", strings.NewReader(body))
+	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	token := generateTestToken(1)
@@ -444,7 +444,7 @@ func TestUpdatePost_Success(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
-	req := httptest.NewRequest("PUT", "/posts/1", strings.NewReader(body))
+	req := httptest.NewRequest("PUT", "/api/posts/1", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	token := generateTestToken(1)
@@ -473,7 +473,7 @@ func TestUpdatePost_NotFound(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
-	req := httptest.NewRequest("PUT", "/posts/999", strings.NewReader(body))
+	req := httptest.NewRequest("PUT", "/api/posts/999", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	token := generateTestToken(1)
@@ -494,7 +494,7 @@ func TestUpdatePost_InvalidID(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
-	req := httptest.NewRequest("PUT", "/posts/abc", strings.NewReader(body))
+	req := httptest.NewRequest("PUT", "/api/posts/abc", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	token := generateTestToken(1)
@@ -515,7 +515,7 @@ func TestUpdatePost_InvalidInput(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"","content":"Content"}`
-	req := httptest.NewRequest("PUT", "/posts/1", strings.NewReader(body))
+	req := httptest.NewRequest("PUT", "/api/posts/1", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	token := generateTestToken(1)
@@ -534,7 +534,7 @@ func TestUpdatePost_NoAuth(t *testing.T) {
 	r := router.SetupRouter(postHandler)
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
-	req := httptest.NewRequest("PUT", "/posts/1", strings.NewReader(body))
+	req := httptest.NewRequest("PUT", "/api/posts/1", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
@@ -551,7 +551,7 @@ func TestDeletePost_Success(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
 	r := router.SetupRouter(postHandler)
 
-	req := httptest.NewRequest("DELETE", "/posts/1", nil)
+	req := httptest.NewRequest("DELETE", "/api/posts/1", nil)
 
 	token := generateTestToken(1)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -578,7 +578,7 @@ func TestDeletePost_NotFound(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
 	r := router.SetupRouter(postHandler)
 
-	req := httptest.NewRequest("DELETE", "/posts/999", nil)
+	req := httptest.NewRequest("DELETE", "/api/posts/999", nil)
 
 	token := generateTestToken(1)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -597,7 +597,7 @@ func TestDeletePost_InvalidID(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
 	r := router.SetupRouter(postHandler)
 
-	req := httptest.NewRequest("DELETE", "/posts/abc", nil)
+	req := httptest.NewRequest("DELETE", "/api/posts/abc", nil)
 
 	token := generateTestToken(1)
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -614,7 +614,7 @@ func TestDeletePost_NoAuth(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
 	r := router.SetupRouter(postHandler)
 
-	req := httptest.NewRequest("DELETE", "/posts/1", nil)
+	req := httptest.NewRequest("DELETE", "/api/posts/1", nil)
 
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)

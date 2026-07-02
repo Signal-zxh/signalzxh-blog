@@ -27,7 +27,7 @@
 ### 文档
 
 - [x] 更新 README：补充分类/标签 API 说明
-- [ ] 更新 Swagger 注释并重新生成 docs（如有变更）
+- [x] 更新 Swagger 注释并重新生成 docs（如有变更）
 
 ---
 
@@ -37,7 +37,7 @@
 
 ### 路由与 API
 
-- [ ] 统一认证路由：目前 `/posts`（`router/auth.go`）与 `/api/posts`（`router/api.go`）并存，择一保留并迁移前端调用
+- [x] 统一认证路由：目前 `/posts`（`router/auth.go`）与 `/api/posts`（`router/api.go`）并存，择一保留并迁移前端调用
 - [ ] 修正 Swagger 路径：`/probe` → `/api/tools/http`，`/agent` → `/api/tools/agent`
 - [ ] 确认公开/需认证接口划分一致（category、tag 的 GET/POST 权限）
 
