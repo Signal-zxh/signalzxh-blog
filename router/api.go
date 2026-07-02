@@ -3,14 +3,17 @@ package router
 import (
 	"net/http"
 
+	"github.com/Signal-zxh/signalzxh-blog/agent"
 	"github.com/Signal-zxh/signalzxh-blog/handler"
 	"github.com/Signal-zxh/signalzxh-blog/middleware"
 	"github.com/Signal-zxh/signalzxh-blog/model"
+	"github.com/Signal-zxh/signalzxh-blog/service"
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAPI(r *gin.Engine, h *handler.PostHandler, ch *handler.CategoryHandler, th *handler.TagHandler) {
-	t := &handler.ToolHandler{}
+func RegisterAPI(r *gin.Engine, h *handler.PostHandler, ch *handler.CategoryHandler, th *handler.TagHandler, postService service.PostService) {
+	toolService := agent.NewToolService(postService)
+	t := handler.NewToolHandler(toolService)
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, model.Success(gin.H{

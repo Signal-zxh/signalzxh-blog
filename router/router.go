@@ -11,7 +11,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(postHandler *handler.PostHandler) *gin.Engine {
+func SetupRouter(postHandler *handler.PostHandler, postService service.PostService) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(middleware.Logger())
@@ -25,7 +25,7 @@ func SetupRouter(postHandler *handler.PostHandler) *gin.Engine {
 	tagHandler := handler.NewTagHandler(tagService)
 
 	RegisterPage(r)
-	RegisterAPI(r, postHandler, categoryHandler, tagHandler)
+	RegisterAPI(r, postHandler, categoryHandler, tagHandler, postService)
 
 	return r
 }

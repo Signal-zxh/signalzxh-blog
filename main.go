@@ -61,7 +61,7 @@ func main() {
 	postService := service.NewPostService(db.PostRepoImpl, cache.PostCacheImpl)
 	postHandler := handler.NewPostHandler(postService)
 
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, postService)
 
 	go func() {
 		log.Println(http.ListenAndServe(":6060", nil))

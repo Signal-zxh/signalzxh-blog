@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/Signal-zxh/signalzxh-blog/agent"
 	"github.com/Signal-zxh/signalzxh-blog/handler"
 	"github.com/Signal-zxh/signalzxh-blog/model"
 	"github.com/Signal-zxh/signalzxh-blog/router"
@@ -93,9 +94,11 @@ func (m *mockPostService) GetPostsByCategory(categoryID, page, pageSize int) ([]
 	if categoryID <= 0 {
 		return nil, 0, service.ErrInvalidInput
 	}
-	return []model.Post{
-		{ID: 1, Title: "Test Post", Content: "Content", CategoryID: categoryID},
-	}, 5, nil
+	post := model.Post{ID: 1, Title: "Test Post", Content: "Content"}
+	if categoryID > 0 {
+		post.CategoryID = &categoryID
+	}
+	return []model.Post{post}, 5, nil
 }
 
 func (m *mockPostService) CreatePostWithCategoryTag(title, content string, userID, categoryID int, tagNames []string) (int64, error) {
@@ -170,7 +173,7 @@ func TestLogin(t *testing.T) {
 	os.Setenv("ADMIN_PASSWORD", "123456")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"username":"admin","password":"123456"}`
 	req := httptest.NewRequest("POST", "/login", strings.NewReader(body))
@@ -200,7 +203,7 @@ func TestLogin(t *testing.T) {
 
 func TestGetPosts_Success(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts?page=1&page_size=10", nil)
 	w := httptest.NewRecorder()
@@ -249,7 +252,7 @@ func TestGetPosts_Success(t *testing.T) {
 
 func TestGetPosts_DefaultParameters(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts", nil)
 	w := httptest.NewRecorder()
@@ -281,7 +284,7 @@ func TestGetPosts_DefaultParameters(t *testing.T) {
 
 func TestGetPosts_InvalidParameters(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts?page=abc&page_size=xyz", nil)
 	w := httptest.NewRecorder()
@@ -313,7 +316,7 @@ func TestGetPosts_InvalidParameters(t *testing.T) {
 
 func TestGetPosts_ServiceError(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostServiceError{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts", nil)
 	w := httptest.NewRecorder()
@@ -342,7 +345,7 @@ func TestCreatePost_Success(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"New Post","content":"New Content"}`
 	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
@@ -374,7 +377,7 @@ func TestCreatePost_Success(t *testing.T) {
 
 func TestCreatePost_NoAuth(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"New Post","content":"New Content"}`
 	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
@@ -392,7 +395,7 @@ func TestCreatePost_InvalidInput(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"","content":"Content"}`
 	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
@@ -420,7 +423,7 @@ func TestCreatePost_BadJSON(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `invalid json`
 	req := httptest.NewRequest("POST", "/api/posts", strings.NewReader(body))
@@ -441,7 +444,7 @@ func TestUpdatePost_Success(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
 	req := httptest.NewRequest("PUT", "/api/posts/1", strings.NewReader(body))
@@ -470,7 +473,7 @@ func TestUpdatePost_NotFound(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
 	req := httptest.NewRequest("PUT", "/api/posts/999", strings.NewReader(body))
@@ -491,7 +494,7 @@ func TestUpdatePost_InvalidID(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
 	req := httptest.NewRequest("PUT", "/api/posts/abc", strings.NewReader(body))
@@ -512,7 +515,7 @@ func TestUpdatePost_InvalidInput(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"","content":"Content"}`
 	req := httptest.NewRequest("PUT", "/api/posts/1", strings.NewReader(body))
@@ -531,7 +534,7 @@ func TestUpdatePost_InvalidInput(t *testing.T) {
 
 func TestUpdatePost_NoAuth(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"title":"Updated Title","content":"Updated Content"}`
 	req := httptest.NewRequest("PUT", "/api/posts/1", strings.NewReader(body))
@@ -549,7 +552,7 @@ func TestDeletePost_Success(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("DELETE", "/api/posts/1", nil)
 
@@ -576,7 +579,7 @@ func TestDeletePost_NotFound(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("DELETE", "/api/posts/999", nil)
 
@@ -595,7 +598,7 @@ func TestDeletePost_InvalidID(t *testing.T) {
 	os.Setenv("JWT_SECRET", "test-secret")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("DELETE", "/api/posts/abc", nil)
 
@@ -612,7 +615,7 @@ func TestDeletePost_InvalidID(t *testing.T) {
 
 func TestDeletePost_NoAuth(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("DELETE", "/api/posts/1", nil)
 
@@ -626,7 +629,7 @@ func TestDeletePost_NoAuth(t *testing.T) {
 
 func TestGetPostByID_Success(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts/1", nil)
 	w := httptest.NewRecorder()
@@ -647,7 +650,7 @@ func TestGetPostByID_Success(t *testing.T) {
 
 func TestGetPostByID_NotFound(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts/999", nil)
 	w := httptest.NewRecorder()
@@ -660,7 +663,7 @@ func TestGetPostByID_NotFound(t *testing.T) {
 
 func TestGetPostByID_InvalidID(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts/abc", nil)
 	w := httptest.NewRecorder()
@@ -673,7 +676,7 @@ func TestGetPostByID_InvalidID(t *testing.T) {
 
 func TestGetPostByID_ServiceError(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostServiceError{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/posts/1", nil)
 	w := httptest.NewRecorder()
@@ -689,7 +692,7 @@ func TestLogin_InvalidCredentials(t *testing.T) {
 	os.Setenv("ADMIN_PASSWORD", "123456")
 
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `{"username":"wrong","password":"wrong"}`
 	req := httptest.NewRequest("POST", "/login", strings.NewReader(body))
@@ -711,7 +714,7 @@ func TestLogin_InvalidCredentials(t *testing.T) {
 
 func TestGetPostsByTag_Success(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/tags/1/posts?page=1&page_size=10", nil)
 	w := httptest.NewRecorder()
@@ -741,7 +744,7 @@ func TestGetPostsByTag_Success(t *testing.T) {
 
 func TestGetPostsByTag_InvalidID(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	req := httptest.NewRequest("GET", "/tags/abc/posts", nil)
 	w := httptest.NewRecorder()
@@ -754,7 +757,7 @@ func TestGetPostsByTag_InvalidID(t *testing.T) {
 
 func TestLogin_BadRequest(t *testing.T) {
 	postHandler := handler.NewPostHandler(&mockPostService{})
-	r := router.SetupRouter(postHandler)
+	r := router.SetupRouter(postHandler, &mockPostService{})
 
 	body := `invalid json`
 	req := httptest.NewRequest("POST", "/login", strings.NewReader(body))
@@ -768,7 +771,8 @@ func TestLogin_BadRequest(t *testing.T) {
 }
 
 func TestHttpProbe_Success(t *testing.T) {
-	toolHandler := &handler.ToolHandler{}
+	toolService := agent.NewToolService(&mockPostService{})
+	toolHandler := handler.NewToolHandler(toolService)
 	r := ginTestRouter()
 
 	r.POST("/probe", toolHandler.HttpProbe)
@@ -791,7 +795,8 @@ func TestHttpProbe_Success(t *testing.T) {
 }
 
 func TestHttpProbe_EmptyURL(t *testing.T) {
-	toolHandler := &handler.ToolHandler{}
+	toolService := agent.NewToolService(&mockPostService{})
+	toolHandler := handler.NewToolHandler(toolService)
 	r := ginTestRouter()
 
 	r.POST("/probe", toolHandler.HttpProbe)
@@ -808,7 +813,8 @@ func TestHttpProbe_EmptyURL(t *testing.T) {
 }
 
 func TestHttpProbe_BadJSON(t *testing.T) {
-	toolHandler := &handler.ToolHandler{}
+	toolService := agent.NewToolService(&mockPostService{})
+	toolHandler := handler.NewToolHandler(toolService)
 	r := ginTestRouter()
 
 	r.POST("/probe", toolHandler.HttpProbe)
@@ -825,7 +831,8 @@ func TestHttpProbe_BadJSON(t *testing.T) {
 }
 
 func TestAgent_Success(t *testing.T) {
-	toolHandler := &handler.ToolHandler{}
+	toolService := agent.NewToolService(&mockPostService{})
+	toolHandler := handler.NewToolHandler(toolService)
 	r := ginTestRouter()
 
 	r.POST("/agent", toolHandler.Agent)
@@ -849,7 +856,8 @@ func TestAgent_Success(t *testing.T) {
 }
 
 func TestAgent_BadJSON(t *testing.T) {
-	toolHandler := &handler.ToolHandler{}
+	toolService := agent.NewToolService(&mockPostService{})
+	toolHandler := handler.NewToolHandler(toolService)
 	r := ginTestRouter()
 
 	r.POST("/agent", toolHandler.Agent)

@@ -22,7 +22,13 @@ func NewPostHandler(postService service.PostService) *PostHandler {
 	return &PostHandler{postService: postService}
 }
 
-type ToolHandler struct{}
+type ToolHandler struct {
+	toolService *agent.ToolService
+}
+
+func NewToolHandler(toolService *agent.ToolService) *ToolHandler {
+	return &ToolHandler{toolService: toolService}
+}
 
 // @Summary 获取文章列表
 // @Description 分页获取文章列表
@@ -603,7 +609,7 @@ func (t *ToolHandler) Agent(c *gin.Context) {
 		return
 	}
 
-	result := agent.RouteTool(req.Query)
+	result := agent.RouteTool(req.Query, t.toolService)
 
 	c.JSON(http.StatusOK, model.Success(gin.H{
 		"result": result,

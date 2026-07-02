@@ -54,13 +54,14 @@
 
 > 将 `agent/` 从占位实现变为可用功能。
 
-- [ ] `GetPosts()` 接入 PostService，返回真实文章列表
-- [ ] `GetPostByID()` 接入 PostService，移除硬编码 id `"26"`
+- [x] `GetPosts()` 接入 PostService，返回真实文章列表
+- [x] `GetPostByID()` 接入 PostService，移除硬编码 id `"26"`
 - [ ] 支持按分类/标签查询（扩展 `RouteTool` 路由逻辑）
 - [ ] 补 Agent 相关单元测试
 - [ ] （可选）接入 LLM API，实现自然语言问答
 
 ---
+- [ ]  网络抖动重复请求
 
 ## P3 — 生产环境加固
 

@@ -265,10 +265,12 @@ func (s *postService) CreatePostWithCategoryTag(title, content string, userID, c
 	}
 
 	post := model.Post{
-		Title:      title,
-		Content:    content,
-		UserID:     userID,
-		CategoryID: categoryID,
+		Title:   title,
+		Content: content,
+		UserID:  userID,
+	}
+	if categoryID > 0 {
+		post.CategoryID = &categoryID
 	}
 
 	id, err := s.repo.CreatePost(post)
@@ -300,10 +302,12 @@ func (s *postService) UpdatePostWithCategoryTag(id, categoryID int, title, conte
 	}
 
 	post := model.Post{
-		ID:         id,
-		Title:      title,
-		Content:    content,
-		CategoryID: categoryID,
+		ID:      id,
+		Title:   title,
+		Content: content,
+	}
+	if categoryID > 0 {
+		post.CategoryID = &categoryID
 	}
 
 	err := s.repo.UpdatePost(post)
