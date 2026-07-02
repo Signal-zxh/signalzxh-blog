@@ -88,7 +88,7 @@ info:
   title: Signalzxh Blog API
   version: "1.0"
 paths:
-  /agent:
+  /api/tools/agent:
     post:
       consumes:
       - application/json
@@ -848,7 +848,7 @@ paths:
       summary: 创建文章（带分类和标签）
       tags:
       - posts
-  /probe:
+  /api/tools/http:
     post:
       consumes:
       - application/json

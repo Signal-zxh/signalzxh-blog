@@ -24,7 +24,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/agent": {
+        "/api/tools/agent": {
             "post": {
                 "description": "调用AI Agent处理查询请求",
                 "consumes": [
@@ -1266,7 +1266,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/probe": {
+        "/api/tools/http": {
             "post": {
                 "description": "发送HTTP请求并返回响应状态和时间",
                 "consumes": [

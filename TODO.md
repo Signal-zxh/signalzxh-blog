@@ -38,7 +38,7 @@
 ### 路由与 API
 
 - [x] 统一认证路由：目前 `/posts`（`router/auth.go`）与 `/api/posts`（`router/api.go`）并存，择一保留并迁移前端调用
-- [ ] 修正 Swagger 路径：`/probe` → `/api/tools/http`，`/agent` → `/api/tools/agent`
+- [x] 修正 Swagger 路径：`/probe` → `/api/tools/http`，`/agent` → `/api/tools/agent`
 - [ ] 确认公开/需认证接口划分一致（category、tag 的 GET/POST 权限）
 
 ### 配置与部署

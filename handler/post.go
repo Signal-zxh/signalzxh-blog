@@ -556,7 +556,7 @@ func (h *PostHandler) Login(c *gin.Context) {
 // @Success 200 {object} model.Response{data=object{status=int,time_ms=int}}
 // @Failure 400 {object} model.Response
 // @Failure 500 {object} model.Response
-// @Router /probe [post]
+// @Router /api/tools/http [post]
 func (t *ToolHandler) HttpProbe(c *gin.Context) {
 	var req struct {
 		URL string `json:"url"`
@@ -592,7 +592,7 @@ func (t *ToolHandler) HttpProbe(c *gin.Context) {
 // @Param request body object{query=string} true "查询内容"
 // @Success 200 {object} model.Response{data=object{result=string}}
 // @Failure 400 {object} model.Response
-// @Router /agent [post]
+// @Router /api/tools/agent [post]
 func (t *ToolHandler) Agent(c *gin.Context) {
 	var req struct {
 		Query string `json:"query"`
