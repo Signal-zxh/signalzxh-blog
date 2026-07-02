@@ -17,6 +17,8 @@
 - 🔐 JWT 认证机制（登录/鉴权）
 - 🗄️ MySQL 数据持久化
 - ⚡ Redis 缓存支持（文章详情缓存，10分钟过期）
+- 📂 文章分类管理（一对一关系）
+- 🏷️ 文章标签管理（多对多关系）
 - 🎨 多页面展示（首页、工具、游戏、关于）
 - 🍅 番茄钟工具（专注计时、休息提醒）
 - 📱 移动端响应式设计
@@ -385,6 +387,87 @@ GET /posts/:id
 
 **注意**: 文章详情接口支持 Redis 缓存，缓存时间 10 分钟
 
+#### 获取文章列表（带分类和标签）
+```http
+GET /posts/detail?page=1&page_size=10
+```
+
+**响应示例：**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "title": "Go语言入门",
+        "content": "...",
+        "category": "技术博客",
+        "tags": ["Go", "后端", "入门"]
+      }
+    ],
+    "total": 10,
+    "page": 1,
+    "page_size": 10
+  }
+}
+```
+
+#### 获取文章详情（带分类和标签）
+```http
+GET /posts/:id/detail
+```
+
+#### 获取分类列表
+```http
+GET /categories
+```
+
+**响应示例：**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": [
+    {"id": 1, "name": "技术博客"},
+    {"id": 2, "name": "生活随笔"}
+  ]
+}
+```
+
+#### 获取单个分类
+```http
+GET /categories/:id
+```
+
+#### 获取标签列表
+```http
+GET /tags
+```
+
+**响应示例：**
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": [
+    {"id": 1, "name": "Go"},
+    {"id": 2, "name": "后端"}
+  ]
+}
+```
+
+#### 获取单个标签
+```http
+GET /tags/:id
+```
+
+#### 获取分类下的文章
+```http
+GET /categories/:id/posts?page=1&page_size=10
+```
+
 ### 需认证接口
 
 以下接口需要携带 JWT Token：
@@ -421,6 +504,94 @@ Authorization: Bearer <token>
 #### 删除文章
 ```http
 DELETE /posts/:id
+Authorization: Bearer <token>
+```
+
+#### 创建文章（带分类和标签）
+```http
+POST /posts/with-tag
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "title": "Go语言入门",
+  "content": "文章内容",
+  "category_id": 1,
+  "tags": ["Go", "后端", "入门"]
+}
+```
+
+**说明**: 
+- `category_id`: 可选，不传则文章无分类
+- `tags`: 可选，标签不存在时自动创建
+
+#### 更新文章（带分类和标签）
+```http
+PUT /posts/:id/with-tag
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "title": "更新后的标题",
+  "content": "更新后的内容",
+  "category_id": 2,
+  "tags": ["Go", "进阶"]
+}
+```
+
+#### 创建分类
+```http
+POST /categories
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "技术博客"
+}
+```
+
+#### 更新分类
+```http
+PUT /categories/:id
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "技术文章"
+}
+```
+
+#### 删除分类
+```http
+DELETE /categories/:id
+Authorization: Bearer <token>
+```
+
+#### 创建标签
+```http
+POST /tags
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "Go"
+}
+```
+
+#### 更新标签
+```http
+PUT /tags/:id
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "name": "Golang"
+}
+```
+
+#### 删除标签
+```http
+DELETE /tags/:id
 Authorization: Bearer <token>
 ```
 
