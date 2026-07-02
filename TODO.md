@@ -45,7 +45,7 @@
 
 - [x] 添加 `.env.example`（README 已引用但仓库缺失）
 - [x] 统一环境变量命名（README 的 `DBHOST` vs 代码的 `DB_HOST` / `DB_USER`）
-- [ ] 清理 `docker-compose.yml` 中未使用的 Postgres 服务，或补充使用说明
+- [x] 清理 `docker-compose.yml` 中未使用的 Postgres 服务，或补充使用说明
 - [x] 核对 docker-compose 环境变量映射是否与 `db/mysql.go` 一致
 
 ---
