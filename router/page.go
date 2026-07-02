@@ -13,6 +13,9 @@ func RegisterPage(r *gin.Engine) {
 	r.GET("/admin/categories", func(c *gin.Context) {
 		c.File("./static/admin-categories.html")
 	})
+	r.GET("/admin/tags", func(c *gin.Context) {
+		c.File("./static/admin-tags.html")
+	})
 	r.GET("/tools", func(c *gin.Context) {
 		c.File("./static/tools.html")
 	})
